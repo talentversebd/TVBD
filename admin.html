@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel — TalentVerse Bangladesh</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="style.css">
 <style>
-/*===== ADMIN EXTRA CSS =====*/
 #admin-wrap{position:fixed;inset:0;z-index:4000;display:flex;flex-direction:column;background:var(--bg)}
 .adm-login{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(37,99,235,.12) 0%,transparent 70%),var(--bg)}
 .adm-login.hidden{display:none}
@@ -115,7 +114,7 @@ select.fi{cursor:pointer}
   <!-- LOGIN -->
   <div class="adm-login" id="adm-login">
     <div class="login-box">
-      <img src="assets/logo.jpg" alt="Logo">
+      <img src="logo.jpg" alt="Logo">
       <h2>Admin Panel</h2>
       <p class="ls">TalentVerse Bangladesh — Staff Only</p>
       <label class="lbl">USERNAME</label>
@@ -140,7 +139,7 @@ select.fi{cursor:pointer}
     <!-- Sidebar -->
     <div class="adm-sb" id="adm-sb">
       <div class="adm-sb-head">
-        <img src="assets/logo.jpg" alt="Logo">
+        <img src="logo.jpg" alt="Logo">
         <span>TalentVerse</span>
       </div>
       <nav class="adm-nav">
@@ -427,12 +426,11 @@ select.fi{cursor:pointer}
 </div>
 
 <!-- SCRIPTS -->
-<script src="js/data.js"></script>
-<script src="js/render.js"></script>
-<script src="js/admin.js"></script>
-<script src="js/main.js"></script>
+<script src="data.js"></script>
+<script src="render.js"></script>
+<script src="admin.js"></script>
+<script src="main.js"></script>
 <script>
-  // Init admin page
   document.addEventListener('DOMContentLoaded', () => {
     checkAdminAuth();
   });
