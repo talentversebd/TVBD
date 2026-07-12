@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — TalentVerse Bangladesh</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+/*===== ADMIN EXTRA CSS =====*/
+#admin-wrap{position:fixed;inset:0;z-index:4000;display:flex;flex-direction:column;background:var(--bg)}
+.adm-login{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(37,99,235,.12) 0%,transparent 70%),var(--bg)}
+.adm-login.hidden{display:none}
+.login-box{background:var(--card);border:1px solid var(--bdr2);border-radius:16px;padding:40px 36px;width:100%;max-width:400px;box-shadow:var(--glow);text-align:center}
+@media(max-width:440px){.login-box{padding:28px 20px;margin:0 12px}}
+.login-box img{width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--blue-br);margin-bottom:16px;background:#fff}
+.login-box h2{font-family:Montserrat;font-size:1.35rem;font-weight:800;margin-bottom:5px}
+.login-box .ls{color:var(--muted);font-size:.85rem;margin-bottom:24px}
+.lbl{display:block;font-size:.77rem;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-align:left}
+.inp{width:100%;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);padding:10px 13px;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:14px}
+.inp:focus{border-color:var(--blue-br);box-shadow:0 0 0 3px rgba(59,130,246,.13)}
+.login-err{color:#f87171;font-size:.8rem;margin:-8px 0 10px;display:none;text-align:left}
+.login-err.show{display:block}
+.adm-shell{display:flex;flex:1;height:100%;overflow:hidden}
+.adm-sb{width:220px;flex-shrink:0;background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;height:100%;overflow-y:auto;transition:transform .3s}
+.adm-sb-head{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px}
+.adm-sb-head img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#fff}
+.adm-sb-head span{font-family:Montserrat;font-size:.88rem;font-weight:800}
+.adm-nav{flex:1;padding:14px 10px;overflow-y:auto}
+.adm-ns{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:0 8px;margin:16px 0 5px}
+.adm-ns:first-child{margin-top:0}
+.adm-nb{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;color:var(--muted);padding:9px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:500;transition:background .15s,color .15s;text-align:left;white-space:nowrap}
+.adm-nb:hover,.adm-nb.active{background:rgba(59,130,246,.1);color:var(--txt)}
+.adm-nb.active{color:var(--blue-br)}
+.adm-nb .ico{width:17px;text-align:center}
+.adm-sb-footer{padding:14px 10px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-shrink:0}
+.adm-sb-footer button{flex:1;background:none;border:1px solid var(--bdr);color:var(--muted);padding:8px 4px;border-radius:7px;cursor:pointer;font-size:.78rem;font-weight:600;transition:background .15s,color .15s}
+.adm-sb-footer button:hover{background:rgba(59,130,246,.08);color:var(--txt)}
+.adm-sb-footer .lb-btn:hover{background:rgba(239,68,68,.08);color:#f87171;border-color:rgba(239,68,68,.28)}
+.sb-overlay{display:none;position:fixed;inset:0;z-index:4001;background:rgba(0,0,0,.5)}
+.sb-overlay.open{display:block}
+.adm-main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.adm-topbar{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--bdr);background:var(--card);flex-shrink:0;flex-wrap:wrap}
+.menu-toggle-btn{background:none;border:1px solid var(--bdr);color:var(--txt);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:1rem;flex-shrink:0;display:none}
+.adm-page-title{font-family:Montserrat;font-size:1.2rem;font-weight:800;flex:1}
+.add-btn{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border:none;padding:9px 18px;border-radius:7px;font-size:.83rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:var(--glow);transition:opacity .2s;white-space:nowrap;flex-shrink:0}
+.add-btn:hover{opacity:.85}
+.save-btn{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:9px 18px;border-radius:7px;font-size:.83rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.save-btn:hover{opacity:.85}
+.adm-sec{display:none;padding:20px;flex:1}
+.adm-sec.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.stat-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:18px}
+.stat-card .sl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:7px}
+.stat-card .sv{font-family:Montserrat;font-size:1.9rem;font-weight:800;color:var(--blue-br)}
+.tbl-wrap{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;min-width:500px}
+.tbl th{background:var(--card2);color:var(--muted);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:11px 14px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.tbl td{padding:13px 14px;border-bottom:1px solid var(--bdr);font-size:.85rem;color:var(--txt);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(59,130,246,.03)}
+.thumb{width:46px;height:34px;object-fit:cover;border-radius:5px;border:1px solid var(--bdr)}
+.tbl-acts{display:flex;gap:7px}
+.tbl-acts button{background:none;border:1px solid var(--bdr);color:var(--muted);padding:5px 11px;border-radius:5px;cursor:pointer;font-size:.75rem;font-weight:600;transition:background .15s,color .15s;white-space:nowrap}
+.tbl-acts .e-btn:hover{background:rgba(59,130,246,.1);color:var(--blue-br);border-color:var(--bdr2)}
+.tbl-acts .d-btn:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.28)}
+.bs{padding:3px 9px;border-radius:4px;font-size:.68rem;font-weight:700;letter-spacing:.05em}
+.bs-active{background:rgba(34,197,94,.14);color:#4ade80;border:1px solid rgba(34,197,94,.22)}
+.bs-upcoming{background:rgba(59,130,246,.14);color:#60a5fa;border:1px solid rgba(59,130,246,.22)}
+.bs-past{background:rgba(107,114,128,.14);color:#9ca3af;border:1px solid rgba(107,114,128,.18)}
+.empty-row td{text-align:center;color:var(--muted);padding:32px!important}
+.he-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.he-grid{grid-template-columns:1fr}}
+.set-wrap{max-width:480px}
+.fm-ov{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+.fm-ov.open{opacity:1;pointer-events:all}
+.fm{background:var(--card);border:1px solid var(--bdr2);border-radius:15px;width:100%;max-width:620px;max-height:93vh;overflow-y:auto;transform:translateY(18px);transition:transform .2s;padding:28px}
+@media(max-width:500px){.fm{padding:18px 14px;border-radius:10px}}
+.fm-ov.open .fm{transform:translateY(0)}
+.fm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.fm-head h3{font-family:Montserrat;font-size:1.1rem;font-weight:800}
+.fm-head button{background:none;border:none;color:var(--muted);font-size:1.25rem;cursor:pointer;line-height:1}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:460px){.f-row{grid-template-columns:1fr}}
+.fg{margin-bottom:15px}
+.fg label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.fi{width:100%;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);padding:10px 13px;border-radius:8px;font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.fi:focus{border-color:var(--blue-br);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+textarea.fi{min-height:90px;resize:vertical}
+select.fi{cursor:pointer}
+.fm-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.fc-btn{background:none;border:1px solid var(--bdr);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:.87rem;font-weight:600;cursor:pointer;transition:background .15s}
+.fc-btn:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.fs-btn{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border:none;padding:10px 26px;border-radius:8px;font-size:.87rem;font-weight:700;cursor:pointer}
+.up-area{border:2px dashed var(--bdr2);border-radius:9px;padding:22px;text-align:center;cursor:pointer;transition:background .2s,border-color .2s;background:rgba(59,130,246,.03)}
+.up-area:hover{background:rgba(59,130,246,.07);border-color:var(--blue-br)}
+.up-area .up-ico{font-size:2rem;margin-bottom:6px}
+.up-area p{font-size:.82rem;color:var(--muted)}
+.up-prev{margin-top:12px}
+.up-prev img,.up-prev video{max-height:110px;border-radius:7px;border:1px solid var(--bdr)}
+@media(max-width:700px){
+  .adm-sb{position:fixed;left:0;top:0;bottom:0;z-index:4002;transform:translateX(-100%);width:220px}
+  .adm-sb.open{transform:translateX(0)}
+  .menu-toggle-btn{display:block}
+  .adm-sec{padding:14px}
+  .adm-topbar{padding:12px 14px}
+}
+@media(min-width:701px){.sb-overlay{display:none!important}}
+</style>
+</head>
+<body>
+
+<div id="admin-wrap">
+
+  <!-- LOGIN -->
+  <div class="adm-login" id="adm-login">
+    <div class="login-box">
+      <img src="assets/logo.jpg" alt="Logo">
+      <h2>Admin Panel</h2>
+      <p class="ls">TalentVerse Bangladesh — Staff Only</p>
+      <label class="lbl">USERNAME</label>
+      <input class="inp" type="text" id="lu" placeholder="Username"
+        onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="lbl">PASSWORD</label>
+      <input class="inp" type="password" id="lp" placeholder="Password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="lerr">Incorrect username or password.</div>
+      <button class="btn-pri" style="width:100%;margin-top:4px;" onclick="doLogin()">
+        Login
+      </button>
+    </div>
+  </div>
+
+  <!-- SHELL -->
+  <div class="adm-shell" id="adm-shell" style="display:none;">
+
+    <!-- Sidebar Overlay -->
+    <div class="sb-overlay" id="sb-ov" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="adm-sb" id="adm-sb">
+      <div class="adm-sb-head">
+        <img src="assets/logo.jpg" alt="Logo">
+        <span>TalentVerse</span>
+      </div>
+      <nav class="adm-nav">
+        <div class="adm-ns">Overview</div>
+        <button class="adm-nb active" data-sec="dash" onclick="goSec(this)">
+          <span class="ico">📊</span>Dashboard
+        </button>
+        <div class="adm-ns">Content</div>
+        <button class="adm-nb" data-sec="home-ed" onclick="goSec(this)">
+          <span class="ico">🏠</span>Home Page
+        </button>
+        <button class="adm-nb" data-sec="olymp-adm" onclick="goSec(this)">
+          <span class="ico">🏆</span>Olympiads
+        </button>
+        <button class="adm-nb" data-sec="gal-adm" onclick="goSec(this)">
+          <span class="ico">📷</span>Gallery
+        </button>
+        <button class="adm-nb" data-sec="news-adm" onclick="goSec(this)">
+          <span class="ico">📰</span>News
+        </button>
+        <div class="adm-ns">Settings</div>
+        <button class="adm-nb" data-sec="set-adm" onclick="goSec(this)">
+          <span class="ico">⚙️</span>Settings
+        </button>
+      </nav>
+      <div class="adm-sb-footer">
+        <button onclick="closeAdmin()">← Site</button>
+        <button class="lb-btn" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="adm-main">
+
+      <!-- Topbar -->
+      <div class="adm-topbar" id="adm-topbar">
+        <button class="menu-toggle-btn" onclick="openSidebar()">☰</button>
+        <span class="adm-page-title" id="adm-ptitle">Dashboard</span>
+        <div id="adm-topbar-actions"></div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="adm-sec active" id="dash">
+        <div class="stats-row" id="db-stats"></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Recent Olympiads</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="db-recent"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HOME EDITOR -->
+      <div class="adm-sec" id="home-ed">
+        <div class="he-grid">
+          <div>
+            <div class="fg"><label>Hero Badge Text</label><input class="fi" id="he-badge" placeholder="Bangladesh's Premier Olympiad Hub"></div>
+            <div class="fg"><label>Hero Title — wrap blue text in [brackets]</label><input class="fi" id="he-title" placeholder="Where [Talent] Meets Opportunity"></div>
+            <div class="fg"><label>Hero Subtitle</label><textarea class="fi" id="he-sub"></textarea></div>
+            <div class="fg"><label>Button 1 Text</label><input class="fi" id="he-b1" placeholder="Explore Olympiads"></div>
+            <div class="fg"><label>Button 2 Text</label><input class="fi" id="he-b2" placeholder="Learn More"></div>
+            <div class="fg"><label>Olympiads Section Description</label><textarea class="fi" id="he-odesc"></textarea></div>
+          </div>
+          <div>
+            <div class="fg"><label>Stat 1 Number</label><input class="fi" id="he-s1n" placeholder="50+"></div>
+            <div class="fg"><label>Stat 1 Label</label><input class="fi" id="he-s1l" placeholder="Olympiads Listed"></div>
+            <div class="fg"><label>Stat 2 Number</label><input class="fi" id="he-s2n" placeholder="10K+"></div>
+            <div class="fg"><label>Stat 2 Label</label><input class="fi" id="he-s2l" placeholder="Students Reached"></div>
+            <div class="fg"><label>Stat 3 Number</label><input class="fi" id="he-s3n" placeholder="64"></div>
+            <div class="fg"><label>Stat 3 Label</label><input class="fi" id="he-s3l" placeholder="Districts Covered"></div>
+            <div class="fg"><label>About Quote</label><textarea class="fi" id="he-quote"></textarea></div>
+            <div class="fg"><label>Footer Description</label><textarea class="fi" id="he-fdesc"></textarea></div>
+            <div class="fg"><label>Footer Email</label><input class="fi" id="he-femail" placeholder="info@talentversebd.org"></div>
+            <div class="fg"><label>Footer Phone</label><input class="fi" id="he-fphone" placeholder="+880 1700-000000"></div>
+            <div class="fg"><label>Footer Address</label><input class="fi" id="he-faddr" placeholder="Dhaka, Bangladesh"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OLYMPIADS -->
+      <div class="adm-sec" id="olymp-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="otbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GALLERY -->
+      <div class="adm-sec" id="gal-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Preview</th>
+                <th>Caption</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="gtbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NEWS -->
+      <div class="adm-sec" id="news-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Headline</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ntbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="adm-sec" id="set-adm">
+        <div class="set-wrap">
+          <div class="fg">
+            <label>Admin Username</label>
+            <input class="fi" id="set-u" placeholder="admin">
+          </div>
+          <div class="fg">
+            <label>New Password (leave blank to keep current)</label>
+            <input class="fi" type="password" id="set-p" placeholder="••••••••">
+          </div>
+          <div class="fg" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--bdr);">
+            <label style="color:#f87171;">Danger Zone</label>
+            <button onclick="resetState()"
+              style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;margin-top:8px;">
+              🗑️ Reset All Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- adm-main -->
+  </div><!-- adm-shell -->
+</div><!-- admin-wrap -->
+
+<!-- OLYMPIAD FORM -->
+<div class="fm-ov" id="ofm" onclick="if(event.target===this)closeFM('ofm')">
+  <div class="fm">
+    <div class="fm-head">
+      <h3 id="ofm-title">Add Olympiad</h3>
+      <button onclick="closeFM('ofm')">✕</button>
+    </div>
+    <input type="hidden" id="of-eid">
+    <div class="fg"><label>Title *</label><input class="fi" id="of-t" placeholder="e.g. Bangladesh Mathematical Olympiad 2026"></div>
+    <div class="f-row">
+      <div class="fg">
+        <label>Category</label>
+        <select class="fi" id="of-cat">
+          <option>Mathematics</option>
+          <option>Science</option>
+          <option>Physics</option>
+          <option>Chemistry</option>
+          <option>Biology</option>
+          <option>Astronomy</option>
+          <option>Informatics/CS</option>
+          <option>English</option>
+          <option>General Knowledge</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Status</label>
+        <select class="fi" id="of-st">
+          <option value="upcoming">Upcoming</option>
+          <option value="active">Active</option>
+          <option value="past">Past</option>
+        </select>
+      </div>
+    </div>
+    <div class="f-row">
+      <div class="fg"><label>Event Date</label><input class="fi" type="date" id="of-dt"></div>
+      <div class="fg"><label>Registration Deadline</label><input class="fi" type="date" id="of-rd"></div>
+    </div>
+    <div class="f-row">
+      <div class="fg"><label>Venue</label><input class="fi" id="of-v" placeholder="e.g. Dhaka University"></div>
+      <div class="fg"><label>Prize / Award</label><input class="fi" id="of-pr" placeholder="e.g. BDT 50,000 + Trophy"></div>
+    </div>
+    <div class="f-row">
+      <div class="fg"><label>Eligibility</label><input class="fi" id="of-el" placeholder="e.g. Class 6–12"></div>
+      <div class="fg"><label>Registration Fee</label><input class="fi" id="of-fe" placeholder="e.g. Free / BDT 200"></div>
+    </div>
+    <div class="fg"><label>Registration Link</label><input class="fi" id="of-rl" placeholder="https://..."></div>
+    <div class="fg"><label>Short Description *</label><textarea class="fi" id="of-ds" placeholder="Brief summary shown on the card..."></textarea></div>
+    <div class="fg"><label>Full Description</label><textarea class="fi" style="min-height:130px" id="of-fd" placeholder="Complete details, rules, schedule..."></textarea></div>
+    <div class="fg">
+      <label>Cover Image — paste URL or upload</label>
+      <input class="fi" id="of-iu" placeholder="https://..." style="margin-bottom:10px;">
+      <div class="up-area" onclick="document.getElementById('of-if').click()">
+        <div class="up-ico">🖼️</div>
+        <p>Tap to upload image from device</p>
+        <input type="file" id="of-if" accept="image/*" style="display:none" onchange="prevOImg(this)">
+      </div>
+      <div class="up-prev" id="of-iprev"></div>
+    </div>
+    <div class="fm-foot">
+      <button class="fc-btn" onclick="closeFM('ofm')">Cancel</button>
+      <button class="fs-btn" onclick="saveOlympiad()">Save Olympiad</button>
+    </div>
+  </div>
+</div>
+
+<!-- GALLERY FORM -->
+<div class="fm-ov" id="gfm" onclick="if(event.target===this)closeFM('gfm')">
+  <div class="fm">
+    <div class="fm-head">
+      <h3 id="gfm-title">Add Media</h3>
+      <button onclick="closeFM('gfm')">✕</button>
+    </div>
+    <input type="hidden" id="gf-eid">
+    <div class="fg"><label>Caption</label><input class="fi" id="gf-cap" placeholder="Describe this photo/video..."></div>
+    <div class="fg">
+      <label>Type</label>
+      <select class="fi" id="gf-type">
+        <option value="image">Image</option>
+        <option value="video">Video</option>
+      </select>
+    </div>
+    <div class="fg"><label>URL (or upload below)</label><input class="fi" id="gf-url" placeholder="https://..."></div>
+    <div class="fg">
+      <label>Upload File</label>
+      <div class="up-area" onclick="document.getElementById('gf-file').click()">
+        <div class="up-ico">📁</div>
+        <p>Tap to upload image or video from device</p>
+        <input type="file" id="gf-file" accept="image/*,video/*" style="display:none" onchange="prevGFile(this)">
+      </div>
+      <div class="up-prev" id="gf-prev"></div>
+    </div>
+    <div class="fm-foot">
+      <button class="fc-btn" onclick="closeFM('gfm')">Cancel</button>
+      <button class="fs-btn" onclick="saveGallery()">Save Media</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS FORM -->
+<div class="fm-ov" id="nfm" onclick="if(event.target===this)closeFM('nfm')">
+  <div class="fm">
+    <div class="fm-head">
+      <h3 id="nfm-title">Add News</h3>
+      <button onclick="closeFM('nfm')">✕</button>
+    </div>
+    <input type="hidden" id="nf-eid">
+    <div class="fg"><label>Headline *</label><input class="fi" id="nf-t" placeholder="News headline..."></div>
+    <div class="fg"><label>Date</label><input class="fi" type="date" id="nf-d"></div>
+    <div class="fg"><label>Body *</label><textarea class="fi" style="min-height:120px" id="nf-b" placeholder="Full news content..."></textarea></div>
+    <div class="fm-foot">
+      <button class="fc-btn" onclick="closeFM('nfm')">Cancel</button>
+      <button class="fs-btn" onclick="saveNews()">Save News</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="t-ico">✅</span>
+  <span class="toast-msg" id="t-msg"></span>
+</div>
+
+<!-- SCRIPTS -->
+<script src="js/data.js"></script>
+<script src="js/render.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // Init admin page
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAdminAuth();
+  });
+</script>
+
+</body>
+</html>

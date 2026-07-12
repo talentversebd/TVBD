@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olympiads — TalentVerse Bangladesh</title>
+<meta name="description" content="Browse all olympiads and competitions available for students in Bangladesh.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;align-items:center;}
+.filter-bar input{flex:1;min-width:200px;background:var(--card);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:8px;font-size:.88rem;outline:none;}
+.filter-bar input:focus{border-color:var(--blue-br);}
+.filter-bar select{background:var(--card);border:1px solid var(--bdr);color:var(--txt);padding:10px 14px;border-radius:8px;font-size:.88rem;outline:none;cursor:pointer;}
+.filter-bar select:focus{border-color:var(--blue-br);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a class="h-logo" href="index.html">
+    <img class="h-logo-img" src="assets/logo.jpg" alt="TalentVerse Logo">
+    <div class="h-logo-text">
+      <div class="name">Talent<span>Verse</span></div>
+      <div class="sub">Bangladesh</div>
+    </div>
+  </a>
+  <nav class="h-nav" id="hnav">
+    <a href="index.html">Home</a>
+    <a href="olympiads.html" class="active">Olympiads</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="news.html">News</a>
+    <a href="contact.html">Contact</a>
+    <button class="h-admin-btn" onclick="window.location.href='admin.html'">⚙ Admin</button>
+  </nav>
+  <button class="hamburger" id="hbtn" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <span class="eyebrow">Competitions & Events</span>
+  <h1>All <span>Olympiads</span></h1>
+  <p>Browse and discover olympiads and competitions designed to elevate your potential.</p>
+</div>
+
+<!-- OLYMPIADS SECTION -->
+<section class="section">
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="🔍 Search olympiads..."
+      oninput="filterOlympiads(this.value, document.getElementById('status-filter').value)">
+    <select
+      id="status-filter"
+      onchange="filterOlympiads(document.getElementById('search-input').value, this.value)">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="upcoming">Upcoming</option>
+      <option value="past">Past</option>
+    </select>
+    <select
+      id="cat-filter"
+      onchange="filterByCategory(this.value)">
+      <option value="all">All Categories</option>
+      <option value="Mathematics">Mathematics</option>
+      <option value="Science">Science</option>
+      <option value="Physics">Physics</option>
+      
