@@ -32,7 +32,7 @@ window.IMGBB_KEY = "b374ae6a3edcf12a90a5b7be9ec39f50";
 window.EMAILJS_CONFIG = {
   serviceId: "service_5d6f3df",
   templateId: "template_gylaytb",
-  publicKey: "oUx7nluCmNJyGq1L30cFJ"
+  publicKey: "4iIwmHI85Rhylf8Sx"
 };
 
 console.log("🔥 Firebase Initialized Successfully!");
