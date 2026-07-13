@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — TalentVerse Bangladesh</title>
+<meta name="description" content="Register for competitions and olympiads at TalentVerse Bangladesh.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.reg-container{max-width:700px;margin:0 auto;padding:0 16px;}
+.reg-card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:32px;box-shadow:var(--glow);}
+@media(max-width:500px){.reg-card{padding:20px 16px;}}
+.reg-card h3{font-family:Montserrat;font-size:1.3rem;font-weight:800;margin-bottom:6px;}
+.reg-card .rs{color:var(--muted);font-size:.9rem;margin-bottom:24px;}
+.rf-group{margin-bottom:16px;}
+.rf-group label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;}
+.rf-input{width:100%;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);padding:11px 14px;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.rf-input:focus{border-color:var(--blue-br);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+textarea.rf-input{min-height:100px;resize:vertical;}
+select.rf-input{cursor:pointer;}
+.rf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.rf-row{grid-template-columns:1fr;}}
+.rf-btn{width:100%;background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border:none;padding:13px;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;margin-top:6px;transition:opacity .2s,transform .15s;box-shadow:var(--glow);}
+.rf-btn:hover{opacity:.9;transform:translateY(-1px);}
+.rf-btn:disabled{opacity:.6;cursor:not-allowed;}
+.reg-success{display:none;text-align:center;padding:40px 20px;}
+.reg-success .rs-ico{font-size:4rem;margin-bottom:16px;}
+.reg-success h2{font-family:Montserrat;font-size:1.6rem;font-weight:800;margin-bottom:10px;}
+.reg-success h2 span{color:var(--blue-br);}
+.reg-success p{color:var(--muted);font-size:.95rem;line-height:1.7;margin-bottom:20px;max-width:400px;margin-left:auto;margin-right:auto;}
+.reg-success .btn-pri{margin-top:10px;display:inline-block;}
+.rf-info{background:rgba(37,99,235,.06);border:1px solid var(--bdr2);border-radius:8px;padding:14px;font-size:.83rem;color:var(--lblue);margin-bottom:20px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a class="h-logo" href="index.html">
+    <img class="h-logo-img" src="logo.jpg" alt="TalentVerse Logo">
+    <div class="h-logo-text">
+      <div class="name">Talent<span>Verse</span></div>
+      <div class="sub">Bangladesh</div>
+    </div>
+  </a>
+  <nav class="h-nav" id="hnav">
+    <a href="index.html">Home</a>
+    <a href="olympiads.html">Olympiads</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="news.html">News</a>
+    <a href="register.html" class="active">Register</a>
+    <a href="contact.html">Contact</a>
+    <button class="h-admin-btn" onclick="window.location.href='admin.html'">⚙ Admin</button>
+  </nav>
+  <button class="hamburger" id="hbtn" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <span class="eyebrow">Registration</span>
+  <h1>Register for <span>Competitions</span></h1>
+  <p>Fill out the form below to register for upcoming olympiads and competitions.</p>
+</div>
+
+<!-- REGISTRATION SECTION -->
+<section class="section">
+  <div class="reg-container">
+
+    <!-- Registration Form -->
+    <div id="reg-form-wrap">
+      <div class="reg-card">
+        <h3>📝 Registration Form</h3>
+        <p class="rs">Complete this form to secure your spot in the competition.</p>
+
+        <div class="rf-info">
+          💡 <strong>Note:</strong> After registration, you'll receive a confirmation email. Our team will contact you with further details.
+        </div>
+
+        <form onsubmit="submitRegistration(event)">
+          
+          <div class="rf-group">
+            <label>Select Olympiad *</label>
+            <select class="rf-input" id="rf-olympiad" required>
+              <option value="">-- Select an Olympiad --</option>
+            </select>
+          </div>
+
+          <div class="rf-row">
+            <div class="rf-group">
+              <label>Full Name *</label>
+              <input class="rf-input" type="text" id="rf-name" placeholder="Your full name" required>
+            </div>
+            <div class="rf-group">
+              <label>Phone Number *</label>
+              <input class="rf-input" type="tel" id="rf-phone" placeholder="+880 1XXX-XXXXXX" required>
+            </div>
+          </div>
+
+          <div class="rf-group">
+            <label>Email Address *</label>
+            <input class="rf-input" type="email" id="rf-email" placeholder="your@email.com" required>
+          </div>
+
+          <div class="rf-row">
+            <div class="rf-group">
+              <label>Class / Grade</label>
+              <input class="rf-input" type="text" id="rf-class" placeholder="e.g. Class 9">
+            </div>
+            <div class="rf-group">
+              <label>School Name</label>
+              <input class="rf-input" type="text" id="rf-school" placeholder="Your school name">
+            </div>
+          </div>
+
+          <div class="rf-group">
+            <label>Address</label>
+            <input class="rf-input" type="text" id="rf-address" placeholder="City, District">
+          </div>
+
+          <div class="rf-group">
+            <label>Additional Message (Optional)</label>
+            <textarea class="rf-input" id="rf-message" placeholder="Any questions or special requirements?"></textarea>
+          </div>
+
+          <button type="submit" class="rf-btn">Submit Registration 🚀</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="reg-card reg-success" id="reg-success">
+      <div class="rs-ico">🎉</div>
+      <h2>Registration <span>Successful!</span></h2>
+      <p>Thank you for registering! We've received your details and will contact you soon with more information about the competition.</p>
+      <p>A confirmation email has been sent to your inbox.</p>
+      <button class="btn-pri" onclick="registerAgain()">Register Another 📝</button>
+      <a href="index.html" class="btn-out" style="margin-left:10px;">Back to Home</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-grid">
+    <div class="f-brand">
+      <a class="h-logo" href="index.html" style="text-decoration:none;">
+        <img class="h-logo-img" src="logo.jpg" alt="Logo">
+        <div class="h-logo-text">
+          <div class="name">Talent<span>Verse</span></div>
+          <div class="sub">Bangladesh</div>
+        </div>
+      </a>
+      <p id="f-desc">TalentVerse Bangladesh is the country's most dedicated platform for olympiad information.</p>
+    </div>
+    <div class="f-col">
+      <h4>Quick Links</h4>
+      <a href="index.html">Home</a>
+      <a href="olympiads.html">Olympiads</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="news.html">News</a>
+      <a href="register.html">Register</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="f-col">
+      <h4>Contact</h4>
+      <a id="f-email" href="#">talentversebangladesh@gmail.com</a>
+      <a id="f-phone" href="#">+880 1634-428536</a>
+      <a id="f-addr" href="#">Dhaka, Bangladesh</a>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <p>© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="t-ico">✅</span>
+  <span class="toast-msg" id="t-msg"></span>
+</div>
+
+<!-- Firebase & EmailJS -->
+<script type="module" src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script src="data.js"></script>
+<script src="render.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
