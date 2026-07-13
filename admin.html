@@ -91,12 +91,16 @@ select.fi{cursor:pointer}
 .fc-btn{background:none;border:1px solid var(--bdr);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:.87rem;font-weight:600;cursor:pointer;transition:background .15s}
 .fc-btn:hover{background:rgba(255,255,255,.04);color:var(--txt)}
 .fs-btn{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border:none;padding:10px 26px;border-radius:8px;font-size:.87rem;font-weight:700;cursor:pointer}
+.fs-btn:disabled{opacity:.6;cursor:not-allowed}
 .up-area{border:2px dashed var(--bdr2);border-radius:9px;padding:22px;text-align:center;cursor:pointer;transition:background .2s,border-color .2s;background:rgba(59,130,246,.03)}
 .up-area:hover{background:rgba(59,130,246,.07);border-color:var(--blue-br)}
 .up-area .up-ico{font-size:2rem;margin-bottom:6px}
 .up-area p{font-size:.82rem;color:var(--muted)}
 .up-prev{margin-top:12px}
 .up-prev img,.up-prev video{max-height:110px;border-radius:7px;border:1px solid var(--bdr)}
+.chk-wrap{display:flex;align-items:center;gap:8px;padding:12px;background:rgba(37,99,235,.05);border:1px solid var(--bdr);border-radius:8px}
+.chk-wrap input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:var(--blue-br)}
+.chk-wrap label{margin:0;font-size:.85rem;color:var(--txt);cursor:pointer}
 @media(max-width:700px){
   .adm-sb{position:fixed;left:0;top:0;bottom:0;z-index:4002;transform:translateX(-100%);width:220px}
   .adm-sb.open{transform:translateX(0)}
@@ -117,23 +121,19 @@ select.fi{cursor:pointer}
       <img src="logo.jpg" alt="Logo">
       <h2>Admin Panel</h2>
       <p class="ls">TalentVerse Bangladesh — Staff Only</p>
-      <label class="lbl">USERNAME</label>
-      <input class="inp" type="text" id="lu" placeholder="Username"
+      <label class="lbl">EMAIL</label>
+      <input class="inp" type="email" id="lu" placeholder="admin@email.com"
         onkeydown="if(event.key==='Enter')doLogin()">
       <label class="lbl">PASSWORD</label>
       <input class="inp" type="password" id="lp" placeholder="Password"
         onkeydown="if(event.key==='Enter')doLogin()">
-      <div class="login-err" id="lerr">Incorrect username or password.</div>
-      <button class="btn-pri" style="width:100%;margin-top:4px;" onclick="doLogin()">
-        Login
-      </button>
+      <div class="login-err" id="lerr">Incorrect email or password.</div>
+      <button class="btn-pri" style="width:100%;margin-top:4px;" onclick="doLogin()">Login</button>
     </div>
   </div>
 
   <!-- SHELL -->
   <div class="adm-shell" id="adm-shell" style="display:none;">
-
-    <!-- Sidebar Overlay -->
     <div class="sb-overlay" id="sb-ov" onclick="closeSidebar()"></div>
 
     <!-- Sidebar -->
@@ -144,26 +144,20 @@ select.fi{cursor:pointer}
       </div>
       <nav class="adm-nav">
         <div class="adm-ns">Overview</div>
-        <button class="adm-nb active" data-sec="dash" onclick="goSec(this)">
-          <span class="ico">📊</span>Dashboard
-        </button>
+        <button class="adm-nb active" data-sec="dash" onclick="goSec(this)"><span class="ico">📊</span>Dashboard</button>
+        
         <div class="adm-ns">Content</div>
-        <button class="adm-nb" data-sec="home-ed" onclick="goSec(this)">
-          <span class="ico">🏠</span>Home Page
-        </button>
-        <button class="adm-nb" data-sec="olymp-adm" onclick="goSec(this)">
-          <span class="ico">🏆</span>Olympiads
-        </button>
-        <button class="adm-nb" data-sec="gal-adm" onclick="goSec(this)">
-          <span class="ico">📷</span>Gallery
-        </button>
-        <button class="adm-nb" data-sec="news-adm" onclick="goSec(this)">
-          <span class="ico">📰</span>News
-        </button>
+        <button class="adm-nb" data-sec="home-ed" onclick="goSec(this)"><span class="ico">🏠</span>Home Page</button>
+        <button class="adm-nb" data-sec="olymp-adm" onclick="goSec(this)"><span class="ico">🏆</span>Olympiads</button>
+        <button class="adm-nb" data-sec="gal-adm" onclick="goSec(this)"><span class="ico">📷</span>Gallery</button>
+        <button class="adm-nb" data-sec="news-adm" onclick="goSec(this)"><span class="ico">📰</span>News</button>
+        
+        <div class="adm-ns">Inbox</div>
+        <button class="adm-nb" data-sec="msg-adm" onclick="goSec(this)"><span class="ico">✉️</span>Messages</button>
+        <button class="adm-nb" data-sec="reg-adm" onclick="goSec(this)"><span class="ico">📝</span>Registrations</button>
+        
         <div class="adm-ns">Settings</div>
-        <button class="adm-nb" data-sec="set-adm" onclick="goSec(this)">
-          <span class="ico">⚙️</span>Settings
-        </button>
+        <button class="adm-nb" data-sec="set-adm" onclick="goSec(this)"><span class="ico">⚙️</span>Settings</button>
       </nav>
       <div class="adm-sb-footer">
         <button onclick="closeAdmin()">← Site</button>
@@ -173,8 +167,6 @@ select.fi{cursor:pointer}
 
     <!-- Main -->
     <div class="adm-main">
-
-      <!-- Topbar -->
       <div class="adm-topbar" id="adm-topbar">
         <button class="menu-toggle-btn" onclick="openSidebar()">☰</button>
         <span class="adm-page-title" id="adm-ptitle">Dashboard</span>
@@ -186,13 +178,7 @@ select.fi{cursor:pointer}
         <div class="stats-row" id="db-stats"></div>
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead>
-              <tr>
-                <th>Recent Olympiads</th>
-                <th>Status</th>
-                <th>Date</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Recent Olympiads</th><th>Status</th><th>Date</th></tr></thead>
             <tbody id="db-recent"></tbody>
           </table>
         </div>
@@ -202,25 +188,25 @@ select.fi{cursor:pointer}
       <div class="adm-sec" id="home-ed">
         <div class="he-grid">
           <div>
-            <div class="fg"><label>Hero Badge Text</label><input class="fi" id="he-badge" placeholder="Bangladesh's Premier Olympiad Hub"></div>
-            <div class="fg"><label>Hero Title — wrap blue text in [brackets]</label><input class="fi" id="he-title" placeholder="Where [Talent] Meets Opportunity"></div>
+            <div class="fg"><label>Hero Badge Text</label><input class="fi" id="he-badge"></div>
+            <div class="fg"><label>Hero Title — wrap blue text in [brackets]</label><input class="fi" id="he-title"></div>
             <div class="fg"><label>Hero Subtitle</label><textarea class="fi" id="he-sub"></textarea></div>
-            <div class="fg"><label>Button 1 Text</label><input class="fi" id="he-b1" placeholder="Explore Olympiads"></div>
-            <div class="fg"><label>Button 2 Text</label><input class="fi" id="he-b2" placeholder="Learn More"></div>
+            <div class="fg"><label>Button 1 Text</label><input class="fi" id="he-b1"></div>
+            <div class="fg"><label>Button 2 Text</label><input class="fi" id="he-b2"></div>
             <div class="fg"><label>Olympiads Section Description</label><textarea class="fi" id="he-odesc"></textarea></div>
           </div>
           <div>
-            <div class="fg"><label>Stat 1 Number</label><input class="fi" id="he-s1n" placeholder="50+"></div>
-            <div class="fg"><label>Stat 1 Label</label><input class="fi" id="he-s1l" placeholder="Olympiads Listed"></div>
-            <div class="fg"><label>Stat 2 Number</label><input class="fi" id="he-s2n" placeholder="10K+"></div>
-            <div class="fg"><label>Stat 2 Label</label><input class="fi" id="he-s2l" placeholder="Students Reached"></div>
-            <div class="fg"><label>Stat 3 Number</label><input class="fi" id="he-s3n" placeholder="64"></div>
-            <div class="fg"><label>Stat 3 Label</label><input class="fi" id="he-s3l" placeholder="Districts Covered"></div>
+            <div class="fg"><label>Stat 1 Number</label><input class="fi" id="he-s1n"></div>
+            <div class="fg"><label>Stat 1 Label</label><input class="fi" id="he-s1l"></div>
+            <div class="fg"><label>Stat 2 Number</label><input class="fi" id="he-s2n"></div>
+            <div class="fg"><label>Stat 2 Label</label><input class="fi" id="he-s2l"></div>
+            <div class="fg"><label>Stat 3 Number</label><input class="fi" id="he-s3n"></div>
+            <div class="fg"><label>Stat 3 Label</label><input class="fi" id="he-s3l"></div>
             <div class="fg"><label>About Quote</label><textarea class="fi" id="he-quote"></textarea></div>
             <div class="fg"><label>Footer Description</label><textarea class="fi" id="he-fdesc"></textarea></div>
-            <div class="fg"><label>Footer Email</label><input class="fi" id="he-femail" placeholder="info@talentversebd.org"></div>
-            <div class="fg"><label>Footer Phone</label><input class="fi" id="he-fphone" placeholder="+880 1700-000000"></div>
-            <div class="fg"><label>Footer Address</label><input class="fi" id="he-faddr" placeholder="Dhaka, Bangladesh"></div>
+            <div class="fg"><label>Footer Email</label><input class="fi" id="he-femail"></div>
+            <div class="fg"><label>Footer Phone</label><input class="fi" id="he-fphone"></div>
+            <div class="fg"><label>Footer Address</label><input class="fi" id="he-faddr"></div>
           </div>
         </div>
       </div>
@@ -229,16 +215,7 @@ select.fi{cursor:pointer}
       <div class="adm-sec" id="olymp-adm">
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="otbl"></tbody>
           </table>
         </div>
@@ -248,14 +225,7 @@ select.fi{cursor:pointer}
       <div class="adm-sec" id="gal-adm">
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead>
-              <tr>
-                <th>Preview</th>
-                <th>Caption</th>
-                <th>Type</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Preview</th><th>Caption</th><th>Type</th><th>Actions</th></tr></thead>
             <tbody id="gtbl"></tbody>
           </table>
         </div>
@@ -265,14 +235,28 @@ select.fi{cursor:pointer}
       <div class="adm-sec" id="news-adm">
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead>
-              <tr>
-                <th>Headline</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Headline</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody id="ntbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="adm-sec" id="msg-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="mtbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REGISTRATIONS -->
+      <div class="adm-sec" id="reg-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Olympiad</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="rtbl"></tbody>
           </table>
         </div>
       </div>
@@ -280,27 +264,19 @@ select.fi{cursor:pointer}
       <!-- SETTINGS -->
       <div class="adm-sec" id="set-adm">
         <div class="set-wrap">
-          <div class="fg">
-            <label>Admin Username</label>
-            <input class="fi" id="set-u" placeholder="admin">
-          </div>
-          <div class="fg">
-            <label>New Password (leave blank to keep current)</label>
-            <input class="fi" type="password" id="set-p" placeholder="••••••••">
-          </div>
-          <div class="fg" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--bdr);">
-            <label style="color:#f87171;">Danger Zone</label>
-            <button onclick="resetState()"
-              style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;margin-top:8px;">
-              🗑️ Reset All Data
-            </button>
+          <div class="fg" style="background:rgba(37,99,235,.05);border:1px solid var(--bdr);border-radius:8px;padding:16px;">
+            <label style="color:var(--blue-br);margin-bottom:10px;">Firebase Authentication</label>
+            <p style="color:var(--muted);font-size:.83rem;line-height:1.6;">
+              Admin credentials are managed through Firebase Console. 
+              To change your email or password, please visit Firebase Console → Authentication → Users.
+            </p>
           </div>
         </div>
       </div>
 
-    </div><!-- adm-main -->
-  </div><!-- adm-shell -->
-</div><!-- admin-wrap -->
+    </div>
+  </div>
+</div>
 
 <!-- OLYMPIAD FORM -->
 <div class="fm-ov" id="ofm" onclick="if(event.target===this)closeFM('ofm')">
@@ -315,16 +291,9 @@ select.fi{cursor:pointer}
       <div class="fg">
         <label>Category</label>
         <select class="fi" id="of-cat">
-          <option>Mathematics</option>
-          <option>Science</option>
-          <option>Physics</option>
-          <option>Chemistry</option>
-          <option>Biology</option>
-          <option>Astronomy</option>
-          <option>Informatics/CS</option>
-          <option>English</option>
-          <option>General Knowledge</option>
-          <option>Other</option>
+          <option>Mathematics</option><option>Science</option><option>Physics</option>
+          <option>Chemistry</option><option>Biology</option><option>Astronomy</option>
+          <option>Informatics/CS</option><option>English</option><option>General Knowledge</option><option>Other</option>
         </select>
       </div>
       <div class="fg">
@@ -341,22 +310,30 @@ select.fi{cursor:pointer}
       <div class="fg"><label>Registration Deadline</label><input class="fi" type="date" id="of-rd"></div>
     </div>
     <div class="f-row">
-      <div class="fg"><label>Venue</label><input class="fi" id="of-v" placeholder="e.g. Dhaka University"></div>
-      <div class="fg"><label>Prize / Award</label><input class="fi" id="of-pr" placeholder="e.g. BDT 50,000 + Trophy"></div>
+      <div class="fg"><label>Venue</label><input class="fi" id="of-v"></div>
+      <div class="fg"><label>Prize / Award</label><input class="fi" id="of-pr"></div>
     </div>
     <div class="f-row">
-      <div class="fg"><label>Eligibility</label><input class="fi" id="of-el" placeholder="e.g. Class 6–12"></div>
-      <div class="fg"><label>Registration Fee</label><input class="fi" id="of-fe" placeholder="e.g. Free / BDT 200"></div>
+      <div class="fg"><label>Eligibility</label><input class="fi" id="of-el"></div>
+      <div class="fg"><label>Registration Fee</label><input class="fi" id="of-fe"></div>
     </div>
-    <div class="fg"><label>Registration Link</label><input class="fi" id="of-rl" placeholder="https://..."></div>
-    <div class="fg"><label>Short Description *</label><textarea class="fi" id="of-ds" placeholder="Brief summary shown on the card..."></textarea></div>
-    <div class="fg"><label>Full Description</label><textarea class="fi" style="min-height:130px" id="of-fd" placeholder="Complete details, rules, schedule..."></textarea></div>
+    <div class="fg"><label>External Registration Link (optional)</label><input class="fi" id="of-rl" placeholder="https://..."></div>
+    
     <div class="fg">
-      <label>Cover Image — paste URL or upload</label>
-      <input class="fi" id="of-iu" placeholder="https://..." style="margin-bottom:10px;">
+      <div class="chk-wrap">
+        <input type="checkbox" id="of-reg-enabled">
+        <label for="of-reg-enabled">✅ Enable Registration Form on Site (allow users to register)</label>
+      </div>
+    </div>
+
+    <div class="fg"><label>Short Description *</label><textarea class="fi" id="of-ds"></textarea></div>
+    <div class="fg"><label>Full Description</label><textarea class="fi" style="min-height:130px" id="of-fd"></textarea></div>
+    <div class="fg">
+      <label>Cover Image (Auto-uploads to ImgBB)</label>
+      <input class="fi" id="of-iu" placeholder="Or paste URL here..." style="margin-bottom:10px;">
       <div class="up-area" onclick="document.getElementById('of-if').click()">
         <div class="up-ico">🖼️</div>
-        <p>Tap to upload image from device</p>
+        <p>Tap to upload image (auto-upload to cloud)</p>
         <input type="file" id="of-if" accept="image/*" style="display:none" onchange="prevOImg(this)">
       </div>
       <div class="up-prev" id="of-iprev"></div>
@@ -376,7 +353,7 @@ select.fi{cursor:pointer}
       <button onclick="closeFM('gfm')">✕</button>
     </div>
     <input type="hidden" id="gf-eid">
-    <div class="fg"><label>Caption</label><input class="fi" id="gf-cap" placeholder="Describe this photo/video..."></div>
+    <div class="fg"><label>Caption</label><input class="fi" id="gf-cap"></div>
     <div class="fg">
       <label>Type</label>
       <select class="fi" id="gf-type">
@@ -386,10 +363,10 @@ select.fi{cursor:pointer}
     </div>
     <div class="fg"><label>URL (or upload below)</label><input class="fi" id="gf-url" placeholder="https://..."></div>
     <div class="fg">
-      <label>Upload File</label>
+      <label>Upload File (Auto-uploads to ImgBB for images)</label>
       <div class="up-area" onclick="document.getElementById('gf-file').click()">
         <div class="up-ico">📁</div>
-        <p>Tap to upload image or video from device</p>
+        <p>Tap to upload image or video</p>
         <input type="file" id="gf-file" accept="image/*,video/*" style="display:none" onchange="prevGFile(this)">
       </div>
       <div class="up-prev" id="gf-prev"></div>
@@ -409,9 +386,9 @@ select.fi{cursor:pointer}
       <button onclick="closeFM('nfm')">✕</button>
     </div>
     <input type="hidden" id="nf-eid">
-    <div class="fg"><label>Headline *</label><input class="fi" id="nf-t" placeholder="News headline..."></div>
+    <div class="fg"><label>Headline *</label><input class="fi" id="nf-t"></div>
     <div class="fg"><label>Date</label><input class="fi" type="date" id="nf-d"></div>
-    <div class="fg"><label>Body *</label><textarea class="fi" style="min-height:120px" id="nf-b" placeholder="Full news content..."></textarea></div>
+    <div class="fg"><label>Body *</label><textarea class="fi" style="min-height:120px" id="nf-b"></textarea></div>
     <div class="fm-foot">
       <button class="fc-btn" onclick="closeFM('nfm')">Cancel</button>
       <button class="fs-btn" onclick="saveNews()">Save News</button>
@@ -425,16 +402,15 @@ select.fi{cursor:pointer}
   <span class="toast-msg" id="t-msg"></span>
 </div>
 
-<!-- SCRIPTS -->
+<!-- Firebase & EmailJS -->
+<script type="module" src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<!-- Site Scripts -->
 <script src="data.js"></script>
 <script src="render.js"></script>
 <script src="admin.js"></script>
 <script src="main.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    checkAdminAuth();
-  });
-</script>
 
 </body>
 </html>
