@@ -235,5 +235,241 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 10000);
 });
 </script>
+  <!-- ═══════════════════════════════════ -->
+<!-- 🔔 NOTICE BAR (Top) -->
+<!-- ═══════════════════════════════════ -->
+<div class="notice-bar" id="notice-bar">
+  <span class="nb-dot" id="nb-dot"></span>
+  <span id="nb-text">Registration is Open Now!</span>
+  <span class="nb-count" id="nb-count" style="display:none;"></span>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- 📢 POPUP NOTICE -->
+<!-- ═══════════════════════════════════ -->
+<div class="popup-ov" id="popup-notice">
+  <div class="popup-box">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <div class="popup-icon">📢</div>
+    <h2 class="popup-title" id="popup-title">Important Notice</h2>
+    <p class="popup-msg" id="popup-msg">Registration is now open!</p>
+    
+    <div class="popup-countdown" id="popup-countdown">
+      <div class="popup-count-item">
+        <div class="popup-count-num" id="pc-days">00</div>
+        <div class="popup-count-label">Days</div>
+      </div>
+      <div class="popup-count-item">
+        <div class="popup-count-num" id="pc-hours">00</div>
+        <div class="popup-count-label">Hours</div>
+      </div>
+      <div class="popup-count-item">
+        <div class="popup-count-num" id="pc-mins">00</div>
+        <div class="popup-count-label">Mins</div>
+      </div>
+      <div class="popup-count-item">
+        <div class="popup-count-num" id="pc-secs">00</div>
+        <div class="popup-count-label">Secs</div>
+      </div>
+    </div>
+    
+    <div class="popup-closed" id="popup-closed" style="display:none;">
+      🔴 Registration Closed
+    </div>
+    
+    <a href="#" id="popup-btn" class="popup-btn" target="_blank" rel="noopener">
+      <span id="popup-btn-text">Apply Now</span>
+      <span>→</span>
+    </a>
+    
+    <label class="popup-dontshow">
+      <input type="checkbox" id="popup-dontshow">
+      Don't show again today
+    </label>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- 🚀 POPUP + COUNTDOWN SCRIPT -->
+<!-- ═══════════════════════════════════ -->
+<script>
+let popupSettings = null;
+let countdownInterval = null;
+
+// Wait for Firebase and Load Popup Settings
+document.addEventListener('DOMContentLoaded', () => {
+  const check = setInterval(async () => {
+    if(typeof getPopupSettings === 'function' && window.firebaseDB) {
+      clearInterval(check);
+      try {
+        popupSettings = await getPopupSettings();
+        initPopupAndNoticeBar();
+      } catch(err) {
+        console.error("Popup load error:", err);
+      }
+    }
+  }, 200);
+});
+
+function initPopupAndNoticeBar() {
+  if(!popupSettings || !popupSettings.active) return;
+  
+  // Setup Notice Bar
+  if(popupSettings.showNoticeBar && popupSettings.noticeBarText) {
+    setupNoticeBar();
+  }
+  
+  // Setup Popup (check if user closed it today)
+  const today = new Date().toDateString();
+  const dismissedDate = localStorage.getItem('tvbd_popup_dismissed');
+  
+  if(dismissedDate !== today) {
+    setTimeout(() => {
+      showPopup();
+    }, 1500); // Show after 1.5 seconds
+  }
+}
+
+function setupNoticeBar() {
+  const bar = document.getElementById('notice-bar');
+  const text = document.getElementById('nb-text');
+  const dot = document.getElementById('nb-dot');
+  const count = document.getElementById('nb-count');
+  
+  if(!bar || !text) return;
+  
+  text.textContent = popupSettings.noticeBarText;
+  bar.classList.add('show');
+  document.body.classList.add('has-notice');
+  
+  // Update countdown in notice bar if deadline exists
+  if(popupSettings.deadline) {
+    updateNoticeBarCountdown();
+    setInterval(updateNoticeBarCountdown, 1000);
+  }
+}
+
+function updateNoticeBarCountdown() {
+  const dot = document.getElementById('nb-dot');
+  const count = document.getElementById('nb-count');
+  if(!dot || !count) return;
+  
+  const now = new Date().getTime();
+  const deadline = new Date(popupSettings.deadline).getTime();
+  const diff = deadline - now;
+  
+  if(diff <= 0) {
+    dot.classList.add('closed');
+    count.textContent = '🔴 Closed';
+    count.style.display = 'inline-block';
+    return;
+  }
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  let text = '';
+  if(days > 0) text = `${days}d ${hours}h left`;
+  else if(hours > 0) text = `${hours}h ${mins}m left`;
+  else text = `${mins}m left`;
+  
+  count.textContent = `⏰ ${text}`;
+  count.style.display = 'inline-block';
+}
+
+function showPopup() {
+  const popup = document.getElementById('popup-notice');
+  if(!popup || !popupSettings) return;
+  
+  // Set content
+  document.getElementById('popup-title').textContent = popupSettings.title || 'Important Notice';
+  document.getElementById('popup-msg').textContent = popupSettings.message || '';
+  
+  const btn = document.getElementById('popup-btn');
+  const btnText = document.getElementById('popup-btn-text');
+  
+  if(popupSettings.buttonLink) {
+    btn.href = popupSettings.buttonLink;
+    btnText.textContent = popupSettings.buttonText || 'Apply Now';
+    btn.style.display = 'inline-flex';
+  } else {
+    btn.style.display = 'none';
+  }
+  
+  // Show popup
+  popup.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  
+  // Start countdown
+  if(popupSettings.deadline) {
+    updatePopupCountdown();
+    countdownInterval = setInterval(updatePopupCountdown, 1000);
+  } else {
+    document.getElementById('popup-countdown').style.display = 'none';
+  }
+}
+
+function updatePopupCountdown() {
+  const now = new Date().getTime();
+  const deadline = new Date(popupSettings.deadline).getTime();
+  const diff = deadline - now;
+  
+  if(diff <= 0) {
+    // Registration closed
+    document.getElementById('popup-countdown').style.display = 'none';
+    document.getElementById('popup-closed').style.display = 'block';
+    const btn = document.getElementById('popup-btn');
+    btn.classList.add('disabled');
+    btn.onclick = (e) => e.preventDefault();
+    document.getElementById('popup-btn-text').textContent = 'Registration Closed';
+    clearInterval(countdownInterval);
+    return;
+  }
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const secs = Math.floor((diff % (1000 * 60)) / 1000);
+  
+  document.getElementById('pc-days').textContent = String(days).padStart(2, '0');
+  document.getElementById('pc-hours').textContent = String(hours).padStart(2, '0');
+  document.getElementById('pc-mins').textContent = String(mins).padStart(2, '0');
+  document.getElementById('pc-secs').textContent = String(secs).padStart(2, '0');
+}
+
+function closePopup() {
+  const popup = document.getElementById('popup-notice');
+  const dontShow = document.getElementById('popup-dontshow');
+  
+  if(popup) popup.classList.remove('show');
+  document.body.style.overflow = '';
+  
+  if(dontShow && dontShow.checked) {
+    const today = new Date().toDateString();
+    localStorage.setItem('tvbd_popup_dismissed', today);
+  }
+  
+  if(countdownInterval) clearInterval(countdownInterval);
+}
+
+// Close on outside click
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('popup-notice');
+  if(popup && e.target === popup) {
+    closePopup();
+  }
+});
+
+// Close on ESC key
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') {
+    const popup = document.getElementById('popup-notice');
+    if(popup && popup.classList.contains('show')) {
+      closePopup();
+    }
+  }
+});
+</script>
 </body>
 </html>
