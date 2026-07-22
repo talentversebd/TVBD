@@ -383,3 +383,41 @@ async function updateRegistrationSettings(data) {
 document.addEventListener('DOMContentLoaded', () => {
   loadAllData();
 });
+/*===== POPUP NOTICE SETTINGS =====*/
+async function getPopupSettings() {
+  await waitForFirebase();
+  const { doc, getDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const snap = await getDoc(doc(db, "settings", "popup"));
+    if(snap.exists()) {
+      return snap.data();
+    }
+    return {
+      active: false,
+      title: "Important Notice",
+      message: "Campus Ambassador Registration - Only 1 Day Left!",
+      buttonText: "Apply Now",
+      buttonLink: "",
+      deadline: "",
+      showNoticeBar: true,
+      noticeBarText: "Registration is Open Now!"
+    };
+  } catch(err) {
+    console.error("Get popup settings error:", err);
+    return { active: false, title: "", message: "", buttonText: "", buttonLink: "", deadline: "", showNoticeBar: false, noticeBarText: "" };
+  }
+}
+
+async function updatePopupSettings(data) {
+  await waitForFirebase();
+  const { doc, setDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    await setDoc(doc(db, "settings", "popup"), data);
+    return true;
+  } catch(err) {
+    console.error("Update popup settings error:", err);
+    return false;
+  }
+}
