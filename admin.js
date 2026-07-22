@@ -1,80 +1,5 @@
-/*===== EMERGENCY DEBUG LOGIN =====*/
-console.log("🚀 admin.js loaded");
+console.log("🚀 Admin.js loaded successfully");
 
-window.addEventListener('load', () => {
-  console.log("✅ Page fully loaded");
-  console.log("Firebase Auth:", window.firebaseAuth);
-  console.log("Firebase Functions:", window.firebaseFunctions);
-  
-  setTimeout(() => {
-    if(window.firebaseAuth) {
-      console.log("✅ Firebase Auth is READY");
-    } else {
-      console.log("❌ Firebase Auth NOT loaded!");
-      alert("❌ Firebase failed to load. Check firebase-config.js");
-    }
-  }, 3000);
-});
-
-async function doLogin() {
-  console.log("🔵 doLogin called!");
-  
-  const emailEl = document.getElementById('lu');
-  const passEl = document.getElementById('lp');
-  const errEl = document.getElementById('lerr');
-  
-  console.log("Email element:", emailEl);
-  console.log("Password element:", passEl);
-  
-  if(!emailEl || !passEl) {
-    alert("❌ Email/Password field not found!");
-    return;
-  }
-  
-  const u = emailEl.value.trim();
-  const p = passEl.value;
-  
-  console.log("Email:", u);
-  console.log("Password length:", p.length);
-  
-  if(!u || !p) {
-    alert("Please fill both fields!");
-    return;
-  }
-  
-  if(!window.firebaseAuth) {
-    alert("❌ Firebase Auth not ready! Wait and try again.");
-    console.error("firebaseAuth is:", window.firebaseAuth);
-    return;
-  }
-  
-  if(!window.firebaseFunctions || !window.firebaseFunctions.signInWithEmailAndPassword) {
-    alert("❌ Firebase functions not loaded!");
-    console.error("firebaseFunctions:", window.firebaseFunctions);
-    return;
-  }
-  
-  try {
-    console.log("🔐 Attempting login...");
-    const { signInWithEmailAndPassword } = window.firebaseFunctions;
-    const result = await signInWithEmailAndPassword(window.firebaseAuth, u, p);
-    console.log("✅ LOGIN SUCCESS!", result.user.email);
-    alert("✅ Login SUCCESS!\n\nEmail: " + result.user.email);
-    
-    // Show admin panel
-    document.getElementById('adm-login').classList.add('hidden');
-    document.getElementById('adm-shell').classList.add('show-admin');
-    document.getElementById('adm-shell').style.display = 'flex';
-    
-    if(typeof renderAdminAll === 'function') {
-      renderAdminAll();
-    }
-    
-  } catch(error) {
-    console.error("❌ LOGIN ERROR:", error);
-    alert("❌ Login Failed!\n\nCode: " + error.code + "\n\nMessage: " + error.message);
-  }
-}
 /*===== ADMIN NAVIGATION =====*/
 function openAdmin() {
   window.location.href = 'admin.html';
@@ -86,71 +11,164 @@ function closeAdmin() {
 
 /*===== FIREBASE AUTH LOGIN =====*/
 async function doLogin() {
+  console.log("🔵 Login button clicked");
+  
   const u = document.getElementById('lu').value.trim();
   const p = document.getElementById('lp').value;
   const err = document.getElementById('lerr');
 
+  console.log("Email entered:", u);
+  console.log("Password length:", p.length);
+
   if(!u || !p) {
-    err.classList.add('show');
-    err.textContent = "Please fill in all fields.";
-    setTimeout(() => err.classList.remove('show'), 3000);
+    alert("⚠️ Please enter both email and password!");
     return;
   }
 
-  const check = setInterval(async () => {
-    if(window.firebaseAuth && window.firebaseFunctions) {
-      clearInterval(check);
-      const { signInWithEmailAndPassword } = window.firebaseFunctions;
-      
-      try {
-        await signInWithEmailAndPassword(window.firebaseAuth, u, p);
-      } catch(error) {
-        err.classList.add('show');
-        err.textContent = "Incorrect email or password.";
-        setTimeout(() => err.classList.remove('show'), 3000);
-        console.error("Login error:", error);
-      }
+  // Check if Firebase is loaded
+  if(!window.firebaseAuth || !window.firebaseFunctions) {
+    alert("⚠️ Firebase is still loading. Please wait 5 seconds and try again.");
+    console.error("Firebase not ready. Auth:", window.firebaseAuth, "Functions:", window.firebaseFunctions);
+    return;
+  }
+
+  try {
+    console.log("🔐 Attempting Firebase login...");
+    const { signInWithEmailAndPassword } = window.firebaseFunctions;
+    const userCredential = await signInWithEmailAndPassword(window.firebaseAuth, u, p);
+    console.log("✅ LOGIN SUCCESS! User:", userCredential.user.email);
+    
+    // Force show admin panel
+    const login = document.getElementById('adm-login');
+    const shell = document.getElementById('adm-shell');
+    
+    if(login) {
+      login.classList.add('hidden');
+      login.style.display = 'none';
     }
-  }, 100);
+    if(shell) {
+      shell.classList.add('show-admin');
+      shell.style.display = 'flex';
+    }
+    
+    // Load admin data
+    if(typeof renderAdminAll === 'function') {
+      renderAdminAll();
+    }
+    if(typeof loadMessages === 'function') {
+      loadMessages().then(() => {
+        if(typeof renderMessagesTable === 'function') renderMessagesTable();
+      });
+    }
+    if(typeof loadRegistrations === 'function') {
+      loadRegistrations().then(() => {
+        if(typeof renderRegistrationsTable === 'function') renderRegistrationsTable();
+      });
+    }
+    
+  } catch(error) {
+    console.error("❌ LOGIN ERROR:", error.code, error.message);
+    
+    let errorMsg = "Login failed!";
+    
+    if(error.code === 'auth/user-not-found') {
+      errorMsg = "❌ No account found with this email.";
+    } else if(error.code === 'auth/wrong-password') {
+      errorMsg = "❌ Incorrect password.";
+    } else if(error.code === 'auth/invalid-email') {
+      errorMsg = "❌ Invalid email format.";
+    } else if(error.code === 'auth/invalid-credential') {
+      errorMsg = "❌ Invalid email or password.";
+    } else if(error.code === 'auth/too-many-requests') {
+      errorMsg = "⚠️ Too many failed attempts. Try again later.";
+    } else if(error.code === 'auth/network-request-failed') {
+      errorMsg = "⚠️ Network error. Check your internet.";
+    } else if(error.code === 'auth/user-disabled') {
+      errorMsg = "❌ This account has been disabled.";
+    } else {
+      errorMsg = "❌ Error: " + error.message;
+    }
+    
+    alert(errorMsg);
+    
+    if(err) {
+      err.classList.add('show');
+      err.textContent = errorMsg;
+      setTimeout(() => err.classList.remove('show'), 5000);
+    }
+  }
 }
 
 /*===== LOGOUT =====*/
 async function doLogout() {
-  const { signOut } = window.firebaseFunctions;
   try {
+    const { signOut } = window.firebaseFunctions;
     await signOut(window.firebaseAuth);
     window.location.href = 'index.html';
   } catch(err) {
     console.error("Logout error:", err);
+    window.location.href = 'index.html';
   }
 }
 
 /*===== AUTH STATE CHECK =====*/
 function checkAdminAuth() {
+  console.log("🔍 Checking auth state...");
+  
   const check = setInterval(() => {
     if(window.firebaseAuth && window.firebaseFunctions) {
       clearInterval(check);
+      console.log("✅ Firebase ready, setting up auth listener");
+      
       const { onAuthStateChanged } = window.firebaseFunctions;
       
       onAuthStateChanged(window.firebaseAuth, (user) => {
+        const login = document.getElementById('adm-login');
+        const shell = document.getElementById('adm-shell');
+        
         if(user) {
-          document.getElementById('adm-login').classList.add('hidden');
-          document.getElementById('adm-shell').style.display = 'flex';
-          renderAdminAll();
-          loadMessages().then(() => {
-            if(typeof renderMessagesTable === 'function') renderMessagesTable();
-          });
-          loadRegistrations().then(() => {
-            if(typeof renderRegistrationsTable === 'function') renderRegistrationsTable();
-          });
+          console.log("✅ User is logged in:", user.email);
+          if(login) {
+            login.classList.add('hidden');
+            login.style.display = 'none';
+          }
+          if(shell) {
+            shell.classList.add('show-admin');
+            shell.style.display = 'flex';
+          }
+          
+          if(typeof renderAdminAll === 'function') renderAdminAll();
+          if(typeof loadMessages === 'function') {
+            loadMessages().then(() => {
+              if(typeof renderMessagesTable === 'function') renderMessagesTable();
+            });
+          }
+          if(typeof loadRegistrations === 'function') {
+            loadRegistrations().then(() => {
+              if(typeof renderRegistrationsTable === 'function') renderRegistrationsTable();
+            });
+          }
         } else {
-          document.getElementById('adm-login').classList.remove('hidden');
-          document.getElementById('adm-shell').style.display = 'none';
+          console.log("❌ No user logged in");
+          if(login) {
+            login.classList.remove('hidden');
+            login.style.display = 'flex';
+          }
+          if(shell) {
+            shell.classList.remove('show-admin');
+            shell.style.display = 'none';
+          }
         }
       });
     }
   }, 100);
 }
+
+// Auto start auth check when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("📄 DOM loaded, starting auth check");
+  checkAdminAuth();
+});
 
 /*===== SIDEBAR =====*/
 function openSidebar() {
@@ -175,17 +193,16 @@ function goSec(btn) {
   btn.classList.add('active');
 
   const titles = {
-  const titles = {
-  'dash': 'Dashboard',
-  'home-ed': 'Home Page Editor',
-  'olymp-adm': 'Manage Olympiads',
-  'gal-adm': 'Gallery Manager',
-  'news-adm': 'News Updates',
-  'msg-adm': 'Contact Messages',
-  'reg-adm': 'Registrations',
-  'popup-adm': 'Popup Notice',
-  'set-adm': 'System Settings'
-};
+    'dash': 'Dashboard',
+    'home-ed': 'Home Page Editor',
+    'olymp-adm': 'Manage Olympiads',
+    'gal-adm': 'Gallery Manager',
+    'news-adm': 'News Updates',
+    'msg-adm': 'Contact Messages',
+    'reg-adm': 'Registrations',
+    'popup-adm': 'Popup Notice',
+    'set-adm': 'System Settings'
+  };
   const ptitle = document.getElementById('adm-ptitle');
   if(ptitle) ptitle.textContent = titles[secId] || secId;
 
@@ -205,35 +222,33 @@ function goSec(btn) {
     }
   }
 
-  // Load settings when opening Settings tab
-if(secId === 'set-adm') {
-  loadRegistrationSettings();
-}
-
-// Load popup settings when opening Popup tab
-if(secId === 'popup-adm') {
-  loadPopupSettings();
-}
+  if(secId === 'set-adm' && typeof loadRegistrationSettings === 'function') {
+    loadRegistrationSettings();
+  }
+  
+  if(secId === 'popup-adm' && typeof loadPopupSettings === 'function') {
+    loadPopupSettings();
+  }
 
   if(window.innerWidth <= 700) closeSidebar();
 }
 
 /*===== RENDER ADMIN ALL =====*/
 function renderAdminAll() {
-  renderDashboard();
-  renderOlympiadTable();
-  renderGalleryTable();
-  renderNewsTable();
-  loadHomeEditor();
+  if(typeof renderDashboard === 'function') renderDashboard();
+  if(typeof renderOlympiadTable === 'function') renderOlympiadTable();
+  if(typeof renderGalleryTable === 'function') renderGalleryTable();
+  if(typeof renderNewsTable === 'function') renderNewsTable();
+  if(typeof loadHomeEditor === 'function') loadHomeEditor();
 }
 
 /*===== DASHBOARD =====*/
 function renderDashboard() {
-  const olympiads = getOlympiads();
-  const gallery = getGallery();
-  const news = getNews();
-  const messages = getMessages();
-  const registrations = getRegistrations();
+  const olympiads = typeof getOlympiads === 'function' ? getOlympiads() : [];
+  const gallery = typeof getGallery === 'function' ? getGallery() : [];
+  const news = typeof getNews === 'function' ? getNews() : [];
+  const messages = typeof getMessages === 'function' ? getMessages() : [];
+  const registrations = typeof getRegistrations === 'function' ? getRegistrations() : [];
 
   const active = olympiads.filter(o => o.status === 'active').length;
   const upcoming = olympiads.filter(o => o.status === 'upcoming').length;
@@ -274,18 +289,16 @@ function renderDashboard() {
 function renderOlympiadTable() {
   const tbody = document.getElementById('otbl');
   if(!tbody) return;
-
   const olympiads = getOlympiads();
   if(olympiads.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No olympiads yet. Click "+ Add Olympiad" to get started.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No olympiads yet.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = '';
   olympiads.forEach((o) => {
     tbody.innerHTML += `
       <tr>
-        <td>${o.img ? `<img src="${o.img}" class="thumb" alt="cover">` : `<div class="thumb" style="background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🏆</div>`}</td>
+        <td>${o.img ? `<img src="${o.img}" class="thumb">` : `<div class="thumb" style="background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🏆</div>`}</td>
         <td>${o.title}</td>
         <td>${o.cat}</td>
         <td>${o.date || 'TBA'}</td>
@@ -302,13 +315,11 @@ function renderOlympiadTable() {
 function renderGalleryTable() {
   const tbody = document.getElementById('gtbl');
   if(!tbody) return;
-
   const gallery = getGallery();
   if(gallery.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No media yet.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = '';
   gallery.forEach((g) => {
     tbody.innerHTML += `
@@ -328,13 +339,11 @@ function renderGalleryTable() {
 function renderNewsTable() {
   const tbody = document.getElementById('ntbl');
   if(!tbody) return;
-
   const news = getNews();
   if(news.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="3">No news yet.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = '';
   news.forEach((n) => {
     tbody.innerHTML += `
@@ -353,13 +362,11 @@ function renderNewsTable() {
 function renderMessagesTable() {
   const tbody = document.getElementById('mtbl');
   if(!tbody) return;
-
   const messages = getMessages();
   if(messages.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No messages yet.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = '';
   messages.forEach((m) => {
     const date = m.createdAt ? new Date(m.createdAt).toLocaleString() : 'N/A';
@@ -386,24 +393,18 @@ function viewMessage(id) {
 async function deleteMessageAction(id) {
   if(!confirm("Delete this message?")) return;
   const ok = await deleteMessage(id);
-  if(ok) {
-    renderMessagesTable();
-    renderDashboard();
-    toast("Message deleted.");
-  }
+  if(ok) { renderMessagesTable(); renderDashboard(); toast("Message deleted."); }
 }
 
 /*===== REGISTRATIONS TABLE =====*/
 function renderRegistrationsTable() {
   const tbody = document.getElementById('rtbl');
   if(!tbody) return;
-
   const regs = getRegistrations();
   if(regs.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No registrations yet.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = '';
   regs.forEach((r) => {
     const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : 'N/A';
@@ -425,58 +426,28 @@ function renderRegistrationsTable() {
 function viewRegistration(id) {
   const r = getRegistrations().find(x => x.id === id);
   if(!r) return;
-  const details = `
-Name: ${r.name}
-Email: ${r.email}
-Phone: ${r.phone}
-Olympiad: ${r.olympiad}
-Class: ${r.class || 'N/A'}
-School: ${r.school || 'N/A'}
-Address: ${r.address || 'N/A'}
-Message: ${r.message || 'N/A'}
-Date: ${r.createdAt ? new Date(r.createdAt).toLocaleString() : 'N/A'}
-  `;
-  alert(details);
+  alert(`Name: ${r.name}\nEmail: ${r.email}\nPhone: ${r.phone}\nOlympiad: ${r.olympiad}\nClass: ${r.class || 'N/A'}\nSchool: ${r.school || 'N/A'}`);
 }
 
 async function deleteRegistrationAction(id) {
   if(!confirm("Delete this registration?")) return;
   const ok = await deleteRegistration(id);
-  if(ok) {
-    renderRegistrationsTable();
-    renderDashboard();
-    toast("Registration deleted.");
-  }
+  if(ok) { renderRegistrationsTable(); renderDashboard(); toast("Registration deleted."); }
 }
 
 function downloadRegistrationsCSV() {
   const regs = getRegistrations();
-  if(regs.length === 0) return toast("No registrations to download.", true);
-
-  let csv = "Name,Email,Phone,Olympiad,Class,School,Address,Message,Date\n";
+  if(regs.length === 0) return toast("No registrations!", true);
+  let csv = "Name,Email,Phone,Olympiad,Class,School,Date\n";
   regs.forEach(r => {
-    const row = [
-      r.name || '',
-      r.email || '',
-      r.phone || '',
-      r.olympiad || '',
-      r.class || '',
-      r.school || '',
-      r.address || '',
-      (r.message || '').replace(/\n/g, ' '),
-      r.createdAt ? new Date(r.createdAt).toLocaleString() : ''
-    ].map(x => `"${String(x).replace(/"/g, '""')}"`).join(',');
-    csv += row + "\n";
+    csv += [r.name, r.email, r.phone, r.olympiad, r.class || '', r.school || '', r.createdAt ? new Date(r.createdAt).toLocaleString() : ''].map(x => `"${String(x || '').replace(/"/g, '""')}"`).join(',') + "\n";
   });
-
   const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `registrations_${new Date().toISOString().split('T')[0]}.csv`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `registrations.csv`;
   a.click();
-  URL.revokeObjectURL(url);
-  toast("CSV downloaded! ✅");
+  toast("Downloaded! ✅");
 }
 
 /*===== HOME EDITOR =====*/
@@ -517,20 +488,13 @@ async function saveHomeEditor() {
     faddr: document.getElementById('he-faddr')?.value || ''
   };
   const ok = await updateHome(data);
-  if(ok) toast("Home page updated! ✅");
+  if(ok) toast("Home updated! ✅");
   else toast("Update failed!", true);
 }
 
 /*===== FORM MODAL =====*/
-function openFM(id) {
-  const el = document.getElementById(id);
-  if(el) el.classList.add('open');
-}
-
-function closeFM(id) {
-  const el = document.getElementById(id);
-  if(el) el.classList.remove('open');
-}
+function openFM(id) { document.getElementById(id)?.classList.add('open'); }
+function closeFM(id) { document.getElementById(id)?.classList.remove('open'); }
 
 /*===== OLYMPIAD FORM =====*/
 function openOlympiadForm() {
@@ -575,8 +539,7 @@ function editOlympiad(id) {
 async function saveOlympiad() {
   const title = document.getElementById('of-t').value.trim();
   const desc = document.getElementById('of-ds').value.trim();
-  if(!title) return toast("Title is required!", true);
-  if(!desc) return toast("Short description is required!", true);
+  if(!title || !desc) return toast("Title and description required!", true);
 
   const o = {
     title, desc,
@@ -595,33 +558,14 @@ async function saveOlympiad() {
   };
 
   const eid = document.getElementById('of-eid').value;
-  const btn = document.querySelector('#ofm .fs-btn');
-  btn.textContent = 'Saving...';
-  btn.disabled = true;
-
   const ok = eid === '' ? await addOlympiad(o) : await updateOlympiad(eid, o);
-  
-  btn.textContent = 'Save Olympiad';
-  btn.disabled = false;
-
-  if(ok) {
-    renderOlympiadTable();
-    renderDashboard();
-    closeFM('ofm');
-    toast("Olympiad saved! ✅");
-  } else {
-    toast("Save failed!", true);
-  }
+  if(ok) { renderOlympiadTable(); renderDashboard(); closeFM('ofm'); toast("Saved! ✅"); }
 }
 
 async function deleteOlympiad(id) {
-  if(!confirm("Delete this olympiad?")) return;
+  if(!confirm("Delete?")) return;
   const ok = await deleteOlympiadData(id);
-  if(ok) {
-    renderOlympiadTable();
-    renderDashboard();
-    toast("Olympiad deleted.");
-  }
+  if(ok) { renderOlympiadTable(); renderDashboard(); toast("Deleted."); }
 }
 
 /*===== GALLERY FORM =====*/
@@ -643,48 +587,23 @@ function editGallery(id) {
   document.getElementById('gf-cap').value = g.cap || '';
   document.getElementById('gf-type').value = g.type || 'image';
   document.getElementById('gf-url').value = g.url || '';
-  document.getElementById('gf-prev').innerHTML = g.type === 'video' ? `<div style="font-size:2rem;padding:10px">🎥</div>` : `<img src="${g.url}">`;
+  document.getElementById('gf-prev').innerHTML = g.type === 'video' ? `<div style="font-size:2rem">🎥</div>` : `<img src="${g.url}">`;
   openFM('gfm');
 }
 
 async function saveGallery() {
   const url = document.getElementById('gf-url').value.trim();
-  if(!url) return toast("URL or file is required!", true);
-
-  const g = {
-    cap: document.getElementById('gf-cap').value.trim(),
-    type: document.getElementById('gf-type').value,
-    url
-  };
-
+  if(!url) return toast("URL required!", true);
+  const g = { cap: document.getElementById('gf-cap').value.trim(), type: document.getElementById('gf-type').value, url };
   const eid = document.getElementById('gf-eid').value;
-  const btn = document.querySelector('#gfm .fs-btn');
-  btn.textContent = 'Saving...';
-  btn.disabled = true;
-
   const ok = eid === '' ? await addGallery(g) : await updateGallery(eid, g);
-  
-  btn.textContent = 'Save Media';
-  btn.disabled = false;
-
-  if(ok) {
-    renderGalleryTable();
-    renderDashboard();
-    closeFM('gfm');
-    toast("Media saved! ✅");
-  } else {
-    toast("Save failed!", true);
-  }
+  if(ok) { renderGalleryTable(); renderDashboard(); closeFM('gfm'); toast("Saved! ✅"); }
 }
 
 async function deleteGallery(id) {
-  if(!confirm("Delete this?")) return;
+  if(!confirm("Delete?")) return;
   const ok = await deleteGalleryData(id);
-  if(ok) {
-    renderGalleryTable();
-    renderDashboard();
-    toast("Deleted.");
-  }
+  if(ok) { renderGalleryTable(); renderDashboard(); toast("Deleted."); }
 }
 
 /*===== NEWS FORM =====*/
@@ -711,118 +630,80 @@ function editNews(id) {
 async function saveNews() {
   const title = document.getElementById('nf-t').value.trim();
   const body = document.getElementById('nf-b').value.trim();
-  if(!title) return toast("Headline is required!", true);
-  if(!body) return toast("News body is required!", true);
-
+  if(!title || !body) return toast("Fields required!", true);
   const n = { title, body, date: document.getElementById('nf-d').value };
-
   const eid = document.getElementById('nf-eid').value;
-  const btn = document.querySelector('#nfm .fs-btn');
-  btn.textContent = 'Saving...';
-  btn.disabled = true;
-
   const ok = eid === '' ? await addNews(n) : await updateNews(eid, n);
-  
-  btn.textContent = 'Save News';
-  btn.disabled = false;
-
-  if(ok) {
-    renderNewsTable();
-    renderDashboard();
-    closeFM('nfm');
-    toast("News saved! ✅");
-  } else {
-    toast("Save failed!", true);
-  }
+  if(ok) { renderNewsTable(); renderDashboard(); closeFM('nfm'); toast("Saved! ✅"); }
 }
 
 async function deleteNews(id) {
-  if(!confirm("Delete this news?")) return;
+  if(!confirm("Delete?")) return;
   const ok = await deleteNewsData(id);
-  if(ok) {
-    renderNewsTable();
-    renderDashboard();
-    toast("News deleted.");
-  }
+  if(ok) { renderNewsTable(); renderDashboard(); toast("Deleted."); }
 }
 
-/*===== IMAGE UPLOAD (Auto ImgBB) =====*/
+/*===== IMAGE UPLOAD =====*/
 async function prevOImg(input) {
-  if(!input.files || !input.files[0]) return;
+  if(!input.files?.[0]) return;
   const file = input.files[0];
-  
-  if(file.size > 32 * 1024 * 1024) {
-    return toast("File too large! Max 32MB", true);
-  }
-
+  if(file.size > 32 * 1024 * 1024) return toast("File too large!", true);
   const prev = document.getElementById('of-iprev');
-  prev.innerHTML = `<div style="padding:10px;color:var(--muted)">⏳ Uploading to ImgBB...</div>`;
-
+  prev.innerHTML = `<div style="padding:10px;color:var(--muted)">⏳ Uploading...</div>`;
   const result = await uploadToImgBB(file);
-  
   if(result.success) {
     document.getElementById('of-iu').value = result.url;
-    prev.innerHTML = `<img src="${result.url}"><div style="color:#4ade80;font-size:.75rem;margin-top:5px">✅ Uploaded!</div>`;
-    toast("Image uploaded! ✅");
+    prev.innerHTML = `<img src="${result.url}">`;
+    toast("Uploaded! ✅");
   } else {
-    prev.innerHTML = `<div style="color:#f87171">❌ Upload failed</div>`;
-    toast("Upload failed!", true);
+    prev.innerHTML = `<div style="color:#f87171">❌ Failed</div>`;
+    toast("Failed!", true);
   }
 }
 
 async function prevGFile(input) {
-  if(!input.files || !input.files[0]) return;
+  if(!input.files?.[0]) return;
   const file = input.files[0];
   const isVideo = file.type.includes('video');
-
   if(isVideo) {
-    if(file.size > 5 * 1024 * 1024) {
-      return toast("Video too large! Max 5MB. Please use a video URL instead.", true);
-    }
+    if(file.size > 5 * 1024 * 1024) return toast("Video too large!", true);
     const reader = new FileReader();
     reader.onload = e => {
       document.getElementById('gf-url').value = e.target.result;
       document.getElementById('gf-type').value = 'video';
-      document.getElementById('gf-prev').innerHTML = `<div style="font-size:2rem;padding:10px">🎥 Video Uploaded</div>`;
+      document.getElementById('gf-prev').innerHTML = `<div style="font-size:2rem">🎥</div>`;
     };
     reader.readAsDataURL(file);
     return;
   }
-
-  if(file.size > 32 * 1024 * 1024) {
-    return toast("File too large! Max 32MB", true);
-  }
-
+  if(file.size > 32 * 1024 * 1024) return toast("File too large!", true);
   const prev = document.getElementById('gf-prev');
-  prev.innerHTML = `<div style="padding:10px;color:var(--muted)">⏳ Uploading to ImgBB...</div>`;
-
+  prev.innerHTML = `<div style="padding:10px;color:var(--muted)">⏳ Uploading...</div>`;
   const result = await uploadToImgBB(file);
-  
   if(result.success) {
     document.getElementById('gf-url').value = result.url;
     document.getElementById('gf-type').value = 'image';
-    prev.innerHTML = `<img src="${result.url}"><div style="color:#4ade80;font-size:.75rem;margin-top:5px">✅ Uploaded!</div>`;
-    toast("Image uploaded! ✅");
+    prev.innerHTML = `<img src="${result.url}">`;
+    toast("Uploaded! ✅");
   } else {
-    prev.innerHTML = `<div style="color:#f87171">❌ Upload failed</div>`;
-    toast("Upload failed!", true);
+    prev.innerHTML = `<div style="color:#f87171">❌ Failed</div>`;
+    toast("Failed!", true);
   }
 }
 
-/*===== REGISTRATION SETTINGS (Google Form) =====*/
+/*===== REGISTRATION SETTINGS =====*/
 async function loadRegistrationSettings() {
   const settings = await getRegistrationSettings();
-  const titleEl = document.getElementById('rs-title');
-  const descEl = document.getElementById('rs-desc');
-  const linkEl = document.getElementById('rs-link');
-  const deadEl = document.getElementById('rs-deadline');
-  const activeEl = document.getElementById('rs-active');
-  
-  if(titleEl) titleEl.value = settings.title || '';
-  if(descEl) descEl.value = settings.description || '';
-  if(linkEl) linkEl.value = settings.formLink || '';
-  if(deadEl) deadEl.value = settings.deadline || '';
-  if(activeEl) activeEl.checked = settings.active || false;
+  const map = {
+    'rs-title': settings.title, 'rs-desc': settings.description,
+    'rs-link': settings.formLink, 'rs-deadline': settings.deadline
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = val || '';
+  });
+  const active = document.getElementById('rs-active');
+  if(active) active.checked = settings.active || false;
 }
 
 async function saveRegistrationSettings() {
@@ -833,52 +714,29 @@ async function saveRegistrationSettings() {
     deadline: document.getElementById('rs-deadline')?.value || '',
     active: document.getElementById('rs-active')?.checked || false
   };
-  
-  if(data.active && !data.formLink) {
-    return toast("Google Form link is required when active!", true);
-  }
-  
-  if(data.active && !data.title) {
-    return toast("Title is required when active!", true);
-  }
-  
-  const btn = document.getElementById('rs-save-btn');
-  if(btn) {
-    btn.textContent = '⏳ Saving...';
-    btn.disabled = true;
-  }
-  
+  if(data.active && !data.formLink) return toast("Google Form link required!", true);
+  if(data.active && !data.title) return toast("Title required!", true);
   const ok = await updateRegistrationSettings(data);
-  
-  if(btn) {
-    btn.textContent = '💾 Save Registration Settings';
-    btn.disabled = false;
-  }
-  
-  if(ok) toast("Registration settings saved! ✅");
-  else toast("Save failed!", true);
+  if(ok) toast("Saved! ✅");
+  else toast("Failed!", true);
 }
-/*===== POPUP NOTICE SETTINGS (Admin) =====*/
+
+/*===== POPUP NOTICE SETTINGS =====*/
 async function loadPopupSettings() {
   const settings = await getPopupSettings();
-  
-  const activeEl = document.getElementById('ps-active');
-  const titleEl = document.getElementById('ps-title');
-  const msgEl = document.getElementById('ps-message');
-  const btnTextEl = document.getElementById('ps-btn-text');
-  const btnLinkEl = document.getElementById('ps-btn-link');
-  const deadEl = document.getElementById('ps-deadline');
-  const nbActiveEl = document.getElementById('ps-nb-active');
-  const nbTextEl = document.getElementById('ps-nb-text');
-  
-  if(activeEl) activeEl.checked = settings.active || false;
-  if(titleEl) titleEl.value = settings.title || '';
-  if(msgEl) msgEl.value = settings.message || '';
-  if(btnTextEl) btnTextEl.value = settings.buttonText || 'Apply Now';
-  if(btnLinkEl) btnLinkEl.value = settings.buttonLink || '';
-  if(deadEl) deadEl.value = settings.deadline || '';
-  if(nbActiveEl) nbActiveEl.checked = settings.showNoticeBar || false;
-  if(nbTextEl) nbTextEl.value = settings.noticeBarText || '';
+  const map = {
+    'ps-title': settings.title, 'ps-message': settings.message,
+    'ps-btn-text': settings.buttonText, 'ps-btn-link': settings.buttonLink,
+    'ps-deadline': settings.deadline, 'ps-nb-text': settings.noticeBarText
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = val || '';
+  });
+  const active = document.getElementById('ps-active');
+  const nbActive = document.getElementById('ps-nb-active');
+  if(active) active.checked = settings.active || false;
+  if(nbActive) nbActive.checked = settings.showNoticeBar || false;
 }
 
 async function savePopupSettings() {
@@ -892,27 +750,9 @@ async function savePopupSettings() {
     showNoticeBar: document.getElementById('ps-nb-active')?.checked || false,
     noticeBarText: document.getElementById('ps-nb-text')?.value.trim() || ''
   };
-  
-  if(data.active && !data.title) {
-    return toast("Title is required when active!", true);
-  }
-  if(data.active && !data.message) {
-    return toast("Message is required when active!", true);
-  }
-  
-  const btn = document.getElementById('ps-save-btn');
-  if(btn) {
-    btn.textContent = '⏳ Saving...';
-    btn.disabled = true;
-  }
-  
+  if(data.active && !data.title) return toast("Title required!", true);
+  if(data.active && !data.message) return toast("Message required!", true);
   const ok = await updatePopupSettings(data);
-  
-  if(btn) {
-    btn.textContent = '💾 Save Popup Settings';
-    btn.disabled = false;
-  }
-  
-  if(ok) toast("Popup settings saved! ✅");
-  else toast("Save failed!", true);
+  if(ok) toast("Saved! ✅");
+  else toast("Failed!", true);
 }
