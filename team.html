@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Executive Panel — TalentVerse Bangladesh</title>
 <meta name="description" content="Meet the team behind TalentVerse Bangladesh.">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
 .dept-group{margin-bottom:44px;}
@@ -105,14 +105,17 @@
     </div>
   </a>
   <nav class="h-nav" id="hnav">
-    <a href="index.html">Home</a>
-    <a href="olympiads.html">Olympiads</a>
-    <a href="team.html" class="active">Team</a>
-    <a href="news.html">News</a>
-    <a href="register.html">Register</a>
-    <a href="verify.html">Verify</a>
-    <a href="contact.html">Contact</a>
-    <button class="h-admin-btn" onclick="window.location.href='admin.html'">⚙ Admin</button>
+    <a href="index.html" data-i18n="nav_home">Home</a>
+    <a href="events.html" data-i18n="nav_olympiads">Events</a>
+    <a href="team.html" class="active" data-i18n="nav_team">Team</a>
+    <a href="news.html" data-i18n="nav_news">News</a>
+    <a href="register.html" data-i18n="nav_register">Register</a>
+    <a href="verify.html" data-i18n="nav_verify">Verify</a>
+    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+    <button class="h-admin-btn" onclick="window.location.href='admin.html'" data-i18n="nav_admin">⚙ Admin</button>
+    <button class="lang-toggle-btn" onclick="toggleLang()" aria-label="Switch language">
+      🌐 <span class="lang-toggle-label">বাং</span>
+    </button>
   </nav>
   <button class="hamburger" id="hbtn" onclick="toggleMobileNav()" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -121,9 +124,9 @@
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-  <span class="eyebrow">Our Team</span>
-  <h1>Executive <span>Panel</span></h1>
-  <p>Meet the leaders and members of TalentVerse Bangladesh.</p>
+  <span class="eyebrow" data-i18n="tp_eyebrow">Our Team</span>
+  <h1><span data-i18n="tp_title_1">Executive</span> <span data-i18n="tp_title_2">Panel</span></h1>
+  <p data-i18n="tp_desc">Meet the leaders and members of TalentVerse Bangladesh.</p>
 </div>
 
 <!-- TEAM SECTION -->
@@ -142,27 +145,27 @@
           <div class="sub">Bangladesh</div>
         </div>
       </a>
-      <p id="f-desc">TalentVerse Bangladesh is the country's most dedicated platform for olympiad information.</p>
+      <p id="f-desc" data-i18n="f_desc">TalentVerse Bangladesh is the country's most dedicated platform for event information.</p>
     </div>
     <div class="f-col">
-      <h4>Quick Links</h4>
-      <a href="index.html">Home</a>
-      <a href="olympiads.html">Olympiads</a>
-      <a href="team.html">Team</a>
-      <a href="news.html">News</a>
-      <a href="register.html">Register</a>
-      <a href="verify.html">Verify</a>
-      <a href="contact.html">Contact</a>
+      <h4 data-i18n="f_quicklinks">Quick Links</h4>
+      <a href="index.html" data-i18n="nav_home">Home</a>
+      <a href="events.html" data-i18n="nav_olympiads">Events</a>
+      <a href="team.html" data-i18n="nav_team">Team</a>
+      <a href="news.html" data-i18n="nav_news">News</a>
+      <a href="register.html" data-i18n="nav_register">Register</a>
+      <a href="verify.html" data-i18n="nav_verify">Verify</a>
+      <a href="contact.html" data-i18n="nav_contact">Contact</a>
     </div>
     <div class="f-col">
-      <h4>Contact</h4>
+      <h4 data-i18n="f_contact">Contact</h4>
       <a id="f-email" href="#">talentversebangladesh@gmail.com</a>
       <a id="f-phone" href="#">+880 1634-428536</a>
       <a id="f-addr" href="#">Dhaka, Bangladesh</a>
     </div>
   </div>
   <div class="f-bottom">
-    <p>© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
+    <p data-i18n="f_bottom">© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
   </div>
 </footer>
 
@@ -177,6 +180,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="data.js"></script>
 <script src="render.js"></script>
+<script src="lang.js"></script>
 <script src="main.js"></script>
 
 <script>
@@ -198,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const grid = document.getElementById('team-page-grid');
     if(grid && grid.innerHTML === '') {
-      grid.innerHTML = `<div class="team-empty"><div class="icon">👥</div><h3>Team Loading...</h3><p>Please wait or refresh the page.</p></div>`;
+      const dict = translations[getLang()];
+      grid.innerHTML = `<div class="team-empty"><div class="icon">👥</div><h3>${dict.tp_loading_t}</h3><p>${dict.tp_loading_d}</p></div>`;
     }
   }, 8000);
 });
@@ -216,9 +221,10 @@ function renderTeamPage() {
   if(!grid) return;
   
   const team = getTeam();
+  const dict = translations[getLang()];
   
   if(team.length === 0) {
-    grid.innerHTML = `<div class="team-empty"><div class="icon">👥</div><h3>Coming Soon</h3><p>Our team information will be available soon. Stay tuned!</p></div>`;
+    grid.innerHTML = `<div class="team-empty"><div class="icon">👥</div><h3>${dict.tp_empty_t}</h3><p>${dict.tp_empty_d}</p></div>`;
     return;
   }
   
@@ -250,12 +256,13 @@ function renderTeamPage() {
           ${m.description ? `<p class="team-bio">${m.description}</p>` : ''}
         </div>
       </div>`).join('');
+    const memberWord = members.length > 1 ? dict.tp_members : dict.tp_member;
     return `
       <div class="dept-group">
         <div class="dept-header">
           <div class="dept-icon">${deptIcon(dept)}</div>
           <div class="dept-name">${dept}</div>
-          <div class="dept-count">${members.length} Member${members.length > 1 ? 's' : ''}</div>
+          <div class="dept-count">${members.length} ${memberWord}</div>
         </div>
         <div class="team-grid">${cards}</div>
       </div>`;
