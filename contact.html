@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contact — TalentVerse Bangladesh</title>
 <meta name="description" content="Get in touch with TalentVerse Bangladesh.">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -29,14 +29,17 @@
     </div>
   </a>
   <nav class="h-nav" id="hnav">
-    <a href="index.html">Home</a>
-    <a href="olympiads.html">Olympiads</a>
-    <a href="team.html">Gallery</a>
-    <a href="news.html">News</a>
-    <a href="register.html">Register</a>
-    <a href="verify.html">Verify</a>
-    <a href="contact.html" class="active">Contact</a>
-    <button class="h-admin-btn" onclick="window.location.href='admin.html'">⚙ Admin</button>
+    <a href="index.html" data-i18n="nav_home">Home</a>
+    <a href="events.html" data-i18n="nav_olympiads">Events</a>
+    <a href="team.html" data-i18n="nav_team">Team</a>
+    <a href="news.html" data-i18n="nav_news">News</a>
+    <a href="register.html" data-i18n="nav_register">Register</a>
+    <a href="verify.html" data-i18n="nav_verify">Verify</a>
+    <a href="contact.html" class="active" data-i18n="nav_contact">Contact</a>
+    <button class="h-admin-btn" onclick="window.location.href='admin.html'" data-i18n="nav_admin">⚙ Admin</button>
+    <button class="lang-toggle-btn" onclick="toggleLang()" aria-label="Switch language">
+      🌐 <span class="lang-toggle-label">বাং</span>
+    </button>
   </nav>
   <button class="hamburger" id="hbtn" onclick="toggleMobileNav()" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -45,9 +48,9 @@
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-  <span class="eyebrow">Get In Touch</span>
-  <h1>Contact <span>Us</span></h1>
-  <p>Have a question or want to collaborate? We'd love to hear from you!</p>
+  <span class="eyebrow" data-i18n="cp_eyebrow">Get In Touch</span>
+  <h1><span data-i18n="cp_title_1">Contact</span> <span data-i18n="cp_title_2">Us</span></h1>
+  <p data-i18n="cp_desc">Have a question or want to collaborate? We'd love to hear from you!</p>
 </div>
 
 <!-- CONTACT SECTION -->
@@ -59,29 +62,29 @@
       <div class="c-info-item">
         <div class="c-info-icon">📧</div>
         <div>
-          <h4>Email Us</h4>
+          <h4 data-i18n="ci_email_t">Email Us</h4>
           <a id="f-email" href="mailto:talentversebangladesh@gmail.com">talentversebangladesh@gmail.com</a>
         </div>
       </div>
       <div class="c-info-item">
         <div class="c-info-icon">📞</div>
         <div>
-          <h4>Call Us</h4>
+          <h4 data-i18n="ci_call_t">Call Us</h4>
           <a id="f-phone" href="tel:+8801634428536">+880 1634-428536</a>
         </div>
       </div>
       <div class="c-info-item">
         <div class="c-info-icon">📍</div>
         <div>
-          <h4>Location</h4>
+          <h4 data-i18n="ci_loc_t">Location</h4>
           <p id="f-addr">Dhaka, Bangladesh</p>
         </div>
       </div>
       <div class="c-info-item">
         <div class="c-info-icon">⏰</div>
         <div>
-          <h4>Response Time</h4>
-          <p>We usually respond within 24 hours.</p>
+          <h4 data-i18n="ci_resp_t">Response Time</h4>
+          <p data-i18n="ci_resp_d">We usually respond within 24 hours.</p>
         </div>
       </div>
 
@@ -89,7 +92,7 @@
       <div class="c-info-item">
         <div class="c-info-icon">🌐</div>
         <div>
-          <h4>Follow Us</h4>
+          <h4 data-i18n="ci_follow_t">Follow Us</h4>
           <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
             <a href="https://www.facebook.com/talentversebangladesh" target="_blank" style="color:var(--blue-br);font-size:.85rem;text-decoration:none;">
     Facebook
@@ -109,25 +112,25 @@
 
     <!-- Contact Form -->
     <div class="contact-form">
-      <h3>Send us a Message ✉️</h3>
+      <h3 data-i18n="cf_title">Send us a Message ✉️</h3>
       <form onsubmit="submitContact(event)">
         <div class="cf-group">
-          <label>Your Name *</label>
-          <input class="cf-input" type="text" id="cf-name" placeholder="Enter your full name" required>
+          <label data-i18n="cf_name_l">Your Name *</label>
+          <input class="cf-input" type="text" id="cf-name" data-i18n-ph="cf_name_ph" placeholder="Enter your full name" required>
         </div>
         <div class="cf-group">
-          <label>Email Address *</label>
-          <input class="cf-input" type="email" id="cf-email" placeholder="your@email.com" required>
+          <label data-i18n="cf_email_l">Email Address *</label>
+          <input class="cf-input" type="email" id="cf-email" data-i18n-ph="cf_email_ph" placeholder="your@email.com" required>
         </div>
         <div class="cf-group">
-          <label>Subject</label>
-          <input class="cf-input" type="text" id="cf-subject" placeholder="What is this about?">
+          <label data-i18n="cf_subject_l">Subject</label>
+          <input class="cf-input" type="text" id="cf-subject" data-i18n-ph="cf_subject_ph" placeholder="What is this about?">
         </div>
         <div class="cf-group">
-          <label>Message *</label>
-          <textarea class="cf-input" id="cf-message" placeholder="Write your message here..." required></textarea>
+          <label data-i18n="cf_message_l">Message *</label>
+          <textarea class="cf-input" id="cf-message" data-i18n-ph="cf_message_ph" placeholder="Write your message here..." required></textarea>
         </div>
-        <button type="submit" class="cf-btn">Send Message 🚀</button>
+        <button type="submit" class="cf-btn" data-i18n="cf_submit">Send Message 🚀</button>
       </form>
     </div>
 
@@ -145,27 +148,27 @@
           <div class="sub">Bangladesh</div>
         </div>
       </a>
-      <p id="f-desc">TalentVerse Bangladesh is the country's most dedicated platform for olympiad information.</p>
+      <p id="f-desc" data-i18n="f_desc">TalentVerse Bangladesh is the country's most dedicated platform for event information.</p>
     </div>
     <div class="f-col">
-      <h4>Quick Links</h4>
-      <a href="index.html">Home</a>
-      <a href="olympiads.html">Olympiads</a>
-      <a href="team.html">Gallery</a>
-      <a href="news.html">News</a>
-      <a href="register.html">Register</a>
-      <a href="verify.html">Verify Certificate</a>
-      <a href="contact.html">Contact</a>
+      <h4 data-i18n="f_quicklinks">Quick Links</h4>
+      <a href="index.html" data-i18n="nav_home">Home</a>
+      <a href="events.html" data-i18n="nav_olympiads">Events</a>
+      <a href="team.html" data-i18n="nav_team">Team</a>
+      <a href="news.html" data-i18n="nav_news">News</a>
+      <a href="register.html" data-i18n="nav_register">Register</a>
+      <a href="verify.html" data-i18n="nav_verify">Verify Certificate</a>
+      <a href="contact.html" data-i18n="nav_contact">Contact</a>
     </div>
     <div class="f-col">
-      <h4>Contact</h4>
+      <h4 data-i18n="f_contact">Contact</h4>
       <a href="mailto:talentversebangladesh@gmail.com">talentversebangladesh@gmail.com</a>
       <a href="tel:+8801634428536">+880 1634-428536</a>
       <p>Dhaka, Bangladesh</p>
     </div>
   </div>
   <div class="f-bottom">
-    <p>© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
+    <p data-i18n="f_bottom">© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
   </div>
 </footer>
 
@@ -181,6 +184,7 @@
 
 <script src="data.js"></script>
 <script src="render.js"></script>
+<script src="lang.js"></script>
 <script src="main.js"></script>
   <!-- ═══════════════════════════════════ -->
 <!-- 🔔 NOTICE BAR (Top) -->
@@ -204,19 +208,19 @@
     <div class="popup-countdown" id="popup-countdown">
       <div class="popup-count-item">
         <div class="popup-count-num" id="pc-days">00</div>
-        <div class="popup-count-label">Days</div>
+        <div class="popup-count-label" data-i18n="days">Days</div>
       </div>
       <div class="popup-count-item">
         <div class="popup-count-num" id="pc-hours">00</div>
-        <div class="popup-count-label">Hours</div>
+        <div class="popup-count-label" data-i18n="hours">Hours</div>
       </div>
       <div class="popup-count-item">
         <div class="popup-count-num" id="pc-mins">00</div>
-        <div class="popup-count-label">Mins</div>
+        <div class="popup-count-label" data-i18n="mins">Mins</div>
       </div>
       <div class="popup-count-item">
         <div class="popup-count-num" id="pc-secs">00</div>
-        <div class="popup-count-label">Secs</div>
+        <div class="popup-count-label" data-i18n="secs">Secs</div>
       </div>
     </div>
     
@@ -231,7 +235,7 @@
     
     <label class="popup-dontshow">
       <input type="checkbox" id="popup-dontshow">
-      Don't show again today
+      <span data-i18n="popup_dontshow">Don't show again today</span>
     </label>
   </div>
 </div>
@@ -330,7 +334,7 @@ function showPopup() {
   if(!popup || !popupSettings) return;
   
   // Set content
-  document.getElementById('popup-title').textContent = popupSettings.title || 'Important Notice';
+  document.getElementById('popup-title').textContent = popupSettings.title || translations[getLang()].popup_title_default;
   document.getElementById('popup-msg').textContent = popupSettings.message || '';
   
   const btn = document.getElementById('popup-btn');
@@ -365,7 +369,9 @@ function updatePopupCountdown() {
   if(diff <= 0) {
     // Registration closed
     document.getElementById('popup-countdown').style.display = 'none';
-    document.getElementById('popup-closed').style.display = 'block';
+    const closedEl = document.getElementById('popup-closed');
+    closedEl.style.display = 'block';
+    closedEl.textContent = translations[getLang()].popup_closed;
     const btn = document.getElementById('popup-btn');
     btn.classList.add('disabled');
     btn.onclick = (e) => e.preventDefault();

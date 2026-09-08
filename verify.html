@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verify Certificate — TalentVerse Bangladesh</title>
 <meta name="description" content="Verify certificates issued by TalentVerse Bangladesh.">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
 .verify-container{max-width:700px;margin:0 auto;padding:0 16px;}
@@ -74,14 +74,17 @@
     </div>
   </a>
   <nav class="h-nav" id="hnav">
-    <a href="index.html">Home</a>
-    <a href="olympiads.html">Olympiads</a>
-    <a href="team.html">Team</a>
-    <a href="news.html">News</a>
-    <a href="register.html">Register</a>
-    <a href="verify.html" class="active">Verify</a>
-    <a href="contact.html">Contact</a>
-    <button class="h-admin-btn" onclick="window.location.href='admin.html'">⚙ Admin</button>
+    <a href="index.html" data-i18n="nav_home">Home</a>
+    <a href="events.html" data-i18n="nav_olympiads">Events</a>
+    <a href="team.html" data-i18n="nav_team">Team</a>
+    <a href="news.html" data-i18n="nav_news">News</a>
+    <a href="register.html" data-i18n="nav_register">Register</a>
+    <a href="verify.html" class="active" data-i18n="nav_verify">Verify</a>
+    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+    <button class="h-admin-btn" onclick="window.location.href='admin.html'" data-i18n="nav_admin">⚙ Admin</button>
+    <button class="lang-toggle-btn" onclick="toggleLang()" aria-label="Switch language">
+      🌐 <span class="lang-toggle-label">বাং</span>
+    </button>
   </nav>
   <button class="hamburger" id="hbtn" onclick="toggleMobileNav()" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -90,9 +93,9 @@
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-  <span class="eyebrow">Certificate Verification</span>
-  <h1>Verify <span>Certificate</span></h1>
-  <p>Enter or scan a certificate ID to verify its authenticity.</p>
+  <span class="eyebrow" data-i18n="vp_eyebrow">Certificate Verification</span>
+  <h1><span data-i18n="vp_title_1">Verify</span> <span data-i18n="vp_title_2">Certificate</span></h1>
+  <p data-i18n="vp_desc">Enter or scan a certificate ID to verify its authenticity.</p>
 </div>
 
 <!-- VERIFY SECTION -->
@@ -102,10 +105,10 @@
     <!-- Search Box -->
     <div class="verify-card" style="padding:24px 20px;margin-bottom:20px;">
       <div class="search-box" style="margin-bottom:0;">
-        <h3>🔍 Search Certificate</h3>
+        <h3 data-i18n="v_search_title">🔍 Search Certificate</h3>
         <div class="search-input-wrap">
-          <input type="text" id="cert-search" class="search-input" placeholder="Enter Certificate ID (e.g. TVBD-2026-001)" onkeydown="if(event.key==='Enter')searchCertificate()">
-          <button onclick="searchCertificate()" class="search-btn">🔍 Verify</button>
+          <input type="text" id="cert-search" class="search-input" data-i18n-ph="v_search_ph" placeholder="Enter Certificate ID (e.g. TVBD-2026-001)" onkeydown="if(event.key==='Enter')searchCertificate()">
+          <button onclick="searchCertificate()" class="search-btn" data-i18n="v_search_btn">🔍 Verify</button>
         </div>
       </div>
     </div>
@@ -113,53 +116,53 @@
     <!-- Loading State -->
     <div class="verify-card verify-loading" id="v-loading" style="display:none;">
       <div class="spin">⏳</div>
-      <p>Verifying certificate...</p>
+      <p data-i18n="v_loading">Verifying certificate...</p>
     </div>
 
     <!-- Verified Certificate -->
     <div class="verify-card" id="v-verified" style="display:none;">
       <div class="verified-badge">
         <div class="check-icon">✅</div>
-        <h2>Certificate Verified</h2>
-        <p>This is an authentic certificate issued by TalentVerse Bangladesh</p>
+        <h2 data-i18n="v_verified_title">Certificate Verified</h2>
+        <p data-i18n="v_verified_sub">This is an authentic certificate issued by TalentVerse Bangladesh</p>
       </div>
 
       <div class="cert-details">
         <div class="detail-row">
-          <span class="detail-label">🆔 Certificate ID</span>
+          <span class="detail-label" data-i18n="v_label_certid">🆔 Certificate ID</span>
           <span class="detail-value cert-id" id="v-certid">-</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">👤 Name</span>
+          <span class="detail-label" data-i18n="v_label_name">👤 Name</span>
           <span class="detail-value" id="v-name">-</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">🏆 Event</span>
+          <span class="detail-label" data-i18n="v_label_event">🏆 Event</span>
           <span class="detail-value" id="v-event">-</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">🥇 Position</span>
+          <span class="detail-label" data-i18n="v_label_position">🥇 Position</span>
           <span class="detail-value position" id="v-position">-</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">📅 Issue Date</span>
+          <span class="detail-label" data-i18n="v_label_date">📅 Issue Date</span>
           <span class="detail-value" id="v-date">-</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">✅ Status</span>
-          <span class="detail-value" style="color:#4ade80;">Verified ✓</span>
+          <span class="detail-label" data-i18n="v_label_status">✅ Status</span>
+          <span class="detail-value" style="color:#4ade80;" data-i18n="v_status_verified">Verified ✓</span>
         </div>
       </div>
 
       <div class="verify-actions">
-        <button onclick="printCertificate()" class="action-btn secondary">🖨️ Print</button>
-        <button onclick="shareLink()" class="action-btn primary">🔗 Share Link</button>
+        <button onclick="printCertificate()" class="action-btn secondary" data-i18n="v_print">🖨️ Print</button>
+        <button onclick="shareLink()" class="action-btn primary" data-i18n="v_share">🔗 Share Link</button>
       </div>
 
       <div class="trust-info">
         <p>
-          🛡️ <strong>Verified by TalentVerse Bangladesh</strong><br>
-          This certificate has been digitally verified and is authentic. For any queries, contact us.
+          🛡️ <strong data-i18n="v_trust_t">Verified by TalentVerse Bangladesh</strong><br>
+          <span data-i18n="v_trust_d">This certificate has been digitally verified and is authentic. For any queries, contact us.</span>
         </p>
       </div>
     </div>
@@ -167,12 +170,12 @@
     <!-- Not Found -->
     <div class="verify-card not-found" id="v-notfound" style="display:none;">
       <div class="icon">❌</div>
-      <h2>Certificate Not Found</h2>
-      <p>The certificate ID you entered doesn't exist in our database. Please check the ID and try again.</p>
-      <p style="font-size:.8rem;color:var(--muted);margin-top:10px;">If you believe this is an error, please contact us.</p>
+      <h2 data-i18n="v_notfound_title">Certificate Not Found</h2>
+      <p data-i18n="v_notfound_d">The certificate ID you entered doesn't exist in our database. Please check the ID and try again.</p>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:10px;" data-i18n="v_notfound_note">If you believe this is an error, please contact us.</p>
       <div class="verify-actions">
-        <button onclick="location.reload()" class="action-btn secondary">🔄 Try Again</button>
-        <a href="contact.html" class="action-btn primary">📧 Contact Us</a>
+        <button onclick="location.reload()" class="action-btn secondary" data-i18n="v_try_again">🔄 Try Again</button>
+        <a href="contact.html" class="action-btn primary" data-i18n="v_contact_us">📧 Contact Us</a>
       </div>
     </div>
 
@@ -190,27 +193,27 @@
           <div class="sub">Bangladesh</div>
         </div>
       </a>
-      <p id="f-desc">TalentVerse Bangladesh is the country's most dedicated platform for olympiad information.</p>
+      <p id="f-desc" data-i18n="f_desc">TalentVerse Bangladesh is the country's most dedicated platform for event information.</p>
     </div>
     <div class="f-col">
-      <h4>Quick Links</h4>
-      <a href="index.html">Home</a>
-      <a href="olympiads.html">Olympiads</a>
-      <a href="team.html">Team</a>
-      <a href="news.html">News</a>
-      <a href="register.html">Register</a>
-      <a href="verify.html">Verify Certificate</a>
-      <a href="contact.html">Contact</a>
+      <h4 data-i18n="f_quicklinks">Quick Links</h4>
+      <a href="index.html" data-i18n="nav_home">Home</a>
+      <a href="events.html" data-i18n="nav_olympiads">Events</a>
+      <a href="team.html" data-i18n="nav_team">Team</a>
+      <a href="news.html" data-i18n="nav_news">News</a>
+      <a href="register.html" data-i18n="nav_register">Register</a>
+      <a href="verify.html" data-i18n="nav_verify">Verify Certificate</a>
+      <a href="contact.html" data-i18n="nav_contact">Contact</a>
     </div>
     <div class="f-col">
-      <h4>Contact</h4>
+      <h4 data-i18n="f_contact">Contact</h4>
       <a id="f-email" href="#">talentversebangladesh@gmail.com</a>
       <a id="f-phone" href="#">+880 1634-428536</a>
       <a id="f-addr" href="#">Dhaka, Bangladesh</a>
     </div>
   </div>
   <div class="f-bottom">
-    <p>© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
+    <p data-i18n="f_bottom">© 2026 <span>TalentVerse Bangladesh</span>. All rights reserved | Developed By Numexis.</p>
   </div>
 </footer>
 
@@ -223,6 +226,7 @@
 <!-- Firebase -->
 <script type="module" src="firebase-config.js"></script>
 <script src="data.js"></script>
+<script src="lang.js"></script>
 <script src="main.js"></script>
 
 <script>
@@ -243,7 +247,7 @@ async function searchCertificate() {
   const certId = document.getElementById('cert-search').value.trim().toUpperCase();
   
   if(!certId) {
-    toast("Please enter a Certificate ID!", true);
+    toast(translations[getLang()].v_toast_enter_id, true);
     return;
   }
 
@@ -291,7 +295,7 @@ function showVerified(cert) {
   document.getElementById('v-position').textContent = cert.position;
   
   // Format date
-  const dateStr = cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('en-US', { 
+  const dateStr = cert.issueDate ? new Date(cert.issueDate).toLocaleDateString(getLang() === 'bn' ? 'bn-BD' : 'en-US', { 
     day: 'numeric', month: 'long', year: 'numeric' 
   }) : 'N/A';
   document.getElementById('v-date').textContent = dateStr;
@@ -313,8 +317,9 @@ function printCertificate() {
 
 function shareLink() {
   const url = window.location.href;
+  const dict = translations[getLang()];
   navigator.clipboard.writeText(url).then(() => {
-    toast("Link copied to clipboard! ✅");
+    toast(dict.v_toast_link_copied);
   }).catch(() => {
     const input = document.createElement('input');
     input.value = url;
@@ -322,7 +327,7 @@ function shareLink() {
     input.select();
     document.execCommand('copy');
     document.body.removeChild(input);
-    toast("Link copied! ✅");
+    toast(dict.v_toast_link_copied);
   });
 }
 </script>
