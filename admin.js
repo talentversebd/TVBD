@@ -57,6 +57,11 @@ function doLogin() {
     if(typeof renderTeamTable === 'function') renderTeamTable();
      });
     }
+    if(typeof loadQuizzes === 'function') {
+      loadQuizzes().then(() => {
+        if(typeof renderQuizTable === 'function') renderQuizTable();
+      });
+    }
     
     toast("Welcome back, Admin! 👋");
   } else {
@@ -107,6 +112,11 @@ function checkAdminAuth() {
     if(typeof renderTeamTable === 'function') renderTeamTable();
       });
     }
+    if(typeof loadQuizzes === 'function') {
+      loadQuizzes().then(() => {
+        if(typeof renderQuizTable === 'function') renderQuizTable();
+      });
+    }
   } else {
     // Not logged in - show login
     if(login) login.style.display = 'flex';
@@ -147,6 +157,8 @@ function goSec(btn) {
     'olymp-adm': 'Manage Olympiads',
     'gal-adm': 'Gallery Manager',
     'news-adm': 'News Updates',
+    'quiz-adm': 'Manage Quizzes',
+    'qsub-adm': 'Quiz Submissions',
     'team-adm': 'Team Members',
     'msg-adm': 'Contact Messages',
     'reg-adm': 'Registrations',
@@ -174,11 +186,17 @@ function goSec(btn) {
       actions.innerHTML = `<button class="add-btn" onclick="downloadRegistrationsCSV()">⬇️ Download CSV</button>`;
     } else if(secId === 'cert-adm') {
       actions.innerHTML = `<button class="add-btn" onclick="openCertificateForm()">+ Add Certificate</button>`;
+    } else if(secId === 'quiz-adm') {
+      actions.innerHTML = `<button class="add-btn" onclick="openQuizForm()">+ Add Quiz</button>`;
     }
   }
 
   if(secId === 'set-adm' && typeof loadRegistrationSettings === 'function') loadRegistrationSettings();
   if(secId === 'popup-adm' && typeof loadPopupSettings === 'function') loadPopupSettings();
+  if(secId === 'quiz-adm' && typeof loadQuizzes === 'function') loadQuizzes().then(() => renderQuizTable());
+  if(secId === 'qsub-adm' && typeof loadQuizSubmissions === 'function') {
+    Promise.all([loadQuizzes(), loadQuizSubmissions()]).then(() => renderQuizSubmissionsTable());
+  }
   if(window.innerWidth <= 700) closeSidebar();
 }
 
@@ -371,6 +389,15 @@ async function saveHomeEditor() {
 function openFM(id) { document.getElementById(id)?.classList.add('open'); }
 function closeFM(id) { document.getElementById(id)?.classList.remove('open'); }
 
+/*===== QUIZ DROPDOWN HELPER (used by Olympiad form) =====*/
+function populateQuizDropdown(selectedId) {
+  const sel = document.getElementById('of-quiz');
+  if(!sel) return;
+  const quizzes = (typeof getQuizzes === 'function') ? getQuizzes() : [];
+  sel.innerHTML = '<option value="">-- No Quiz Linked --</option>' +
+    quizzes.map(q => `<option value="${q.id}" ${q.id === selectedId ? 'selected' : ''}>${q.title}${q.status === 'published' ? '' : ' (Draft)'}</option>`).join('');
+}
+
 /*===== OLYMPIAD FORM =====*/
 function openOlympiadForm() {
   document.getElementById('ofm-title').textContent = "Add Olympiad";
@@ -380,6 +407,7 @@ function openOlympiadForm() {
   document.getElementById('of-st').value = 'upcoming';
   const chk = document.getElementById('of-reg-enabled'); if(chk) chk.checked = false;
   document.getElementById('of-iprev').innerHTML = '';
+  populateQuizDropdown('');
   openFM('ofm');
 }
 function editOlympiad(id) {
@@ -401,13 +429,14 @@ function editOlympiad(id) {
   document.getElementById('of-iu').value = o.img||'';
   const chk = document.getElementById('of-reg-enabled'); if(chk) chk.checked = o.regEnabled||false;
   document.getElementById('of-iprev').innerHTML = o.img ? `<img src="${o.img}">` : '';
+  populateQuizDropdown(o.quizId || '');
   openFM('ofm');
 }
 async function saveOlympiad() {
   const title = document.getElementById('of-t').value.trim();
   const desc = document.getElementById('of-ds').value.trim();
   if(!title || !desc) return toast("Title & description required!", true);
-  const o = { title, desc, cat:document.getElementById('of-cat').value, status:document.getElementById('of-st').value, date:document.getElementById('of-dt').value, deadline:document.getElementById('of-rd').value, venue:document.getElementById('of-v').value, prize:document.getElementById('of-pr').value, eligibility:document.getElementById('of-el').value, fee:document.getElementById('of-fe').value, regLink:document.getElementById('of-rl').value, fullDesc:document.getElementById('of-fd').value, img:document.getElementById('of-iu').value, regEnabled:document.getElementById('of-reg-enabled')?.checked||false };
+  const o = { title, desc, cat:document.getElementById('of-cat').value, status:document.getElementById('of-st').value, date:document.getElementById('of-dt').value, deadline:document.getElementById('of-rd').value, venue:document.getElementById('of-v').value, prize:document.getElementById('of-pr').value, eligibility:document.getElementById('of-el').value, fee:document.getElementById('of-fe').value, regLink:document.getElementById('of-rl').value, fullDesc:document.getElementById('of-fd').value, img:document.getElementById('of-iu').value, regEnabled:document.getElementById('of-reg-enabled')?.checked||false, quizId:document.getElementById('of-quiz')?.value || '' };
   const eid = document.getElementById('of-eid').value;
   const ok = eid === '' ? await addOlympiad(o) : await updateOlympiad(eid, o);
   if(ok) { renderOlympiadTable(); renderDashboard(); closeFM('ofm'); toast("Saved! ✅"); }
@@ -752,9 +781,12 @@ async function prevTeamPhoto(input) {
     toast("Upload failed!", true);
   }
 }
+
 /*===== QUIZ / EXAM ADMIN =====*/
 let qfQuestionCount = 0;
 
+// datetime-local inputs need "YYYY-MM-DDTHH:mm" in local time — Date's
+// own ISO string is UTC, so build it from local field values instead.
 function qfTimestampToLocalInput(ts) {
   if(!ts) return '';
   const d = new Date(ts);
@@ -778,7 +810,7 @@ function openQuizForm() {
   document.getElementById('qf-end').value = '';
   document.getElementById('qf-questions').innerHTML = '';
   qfQuestionCount = 0;
-  addQuizQuestionRow();
+  addQuizQuestionRow(); // start with one blank question
   openFM('qfm');
 }
 
@@ -920,6 +952,7 @@ function renderQuizTable() {
     </tr>`;
   }).join('');
 }
+
 /*----- QUIZ SUBMISSIONS (review & grade) -----*/
 function renderQuizSubmissionsTable() {
   const tbody = document.getElementById('qstbl');
