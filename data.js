@@ -624,3 +624,221 @@ async function deleteTeamMember(id) {
     return false;
   }
 }
+/*===== QUIZ / EXAM SYSTEM =====*/
+
+// Load all quizzes
+async function loadQuizzes() {
+  await waitForFirebase();
+  const { collection, getDocs, query, orderBy } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const snap = await getDocs(query(collection(db, "quizzes"), orderBy("createdAt", "desc")));
+    cache.quizzes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return cache.quizzes;
+  } catch(err) {
+    console.error("Load quizzes error:", err);
+    cache.quizzes = cache.quizzes || [];
+    return cache.quizzes;
+  }
+}
+function getQuizzes() { return cache.quizzes || []; }
+function getPublishedQuizzes() { return (cache.quizzes || []).filter(q => q.status === 'published'); }
+
+function qzMakeSubId(quizId, email) {
+  const clean = (email || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '') || 'noemail';
+  return `${quizId}__${clean}`;
+}
+
+function getQuizAvailability(quiz) {
+  const now = Date.now();
+  if (quiz.startAt && now < quiz.startAt) {
+    return { open: false, reason: 'not_started', at: quiz.startAt };
+  }
+  if (quiz.endAt && now > quiz.endAt) {
+    return { open: false, reason: 'ended', at: quiz.endAt };
+  }
+  return { open: true, reason: 'ok' };
+}
+
+function hasLocalQuizAttempt(quizId) {
+  try { return !!localStorage.getItem('tvbd_quiz_done_' + quizId); } catch (e) { return false; }
+}
+function markLocalQuizAttempt(quizId) {
+  try { localStorage.setItem('tvbd_quiz_done_' + quizId, String(Date.now())); } catch (e) {}
+}
+
+async function hasAlreadyAttemptedQuiz(quizId, email) {
+  if (hasLocalQuizAttempt(quizId)) return true;
+  await waitForFirebase();
+  const { doc, getDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const id = qzMakeSubId(quizId, email);
+    const d = await getDoc(doc(db, "quiz_submissions", id));
+    return d.exists();
+  } catch (err) {
+    return false;
+  }
+}
+
+async function getQuizById(id) {
+  if(cache.quizzes) {
+    const found = cache.quizzes.find(q => q.id === id);
+    if(found) return found;
+  }
+  await waitForFirebase();
+  const { doc, getDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const d = await getDoc(doc(db, "quizzes", id));
+    if(d.exists()) return { id: d.id, ...d.data() };
+    return null;
+  } catch(err) {
+    console.error("Get quiz error:", err);
+    return null;
+  }
+}
+
+async function addQuiz(quiz) {
+  await waitForFirebase();
+  const { collection, addDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    quiz.createdAt = Date.now();
+    const ref = await addDoc(collection(db, "quizzes"), quiz);
+    if(!cache.quizzes) cache.quizzes = [];
+    cache.quizzes.unshift({ id: ref.id, ...quiz });
+    return { success: true, id: ref.id };
+  } catch(err) {
+    console.error("Add quiz error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function updateQuiz(id, quiz) {
+  await waitForFirebase();
+  const { doc, updateDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    quiz.updatedAt = Date.now();
+    await updateDoc(doc(db, "quizzes", id), quiz);
+    if(cache.quizzes) {
+      const idx = cache.quizzes.findIndex(x => x.id === id);
+      if(idx > -1) cache.quizzes[idx] = { id, ...cache.quizzes[idx], ...quiz };
+    }
+    return { success: true };
+  } catch(err) {
+    console.error("Update quiz error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function deleteQuiz(id) {
+  await waitForFirebase();
+  const { doc, deleteDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    await deleteDoc(doc(db, "quizzes", id));
+    if(cache.quizzes) cache.quizzes = cache.quizzes.filter(x => x.id !== id);
+    return true;
+  } catch(err) {
+    console.error("Delete quiz error:", err);
+    return false;
+  }
+}
+/*----- QUIZ SUBMISSIONS -----*/
+async function loadQuizSubmissions() {
+  await waitForFirebase();
+  const { collection, getDocs, query, orderBy } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const snap = await getDocs(query(collection(db, "quiz_submissions"), orderBy("submittedAt", "desc")));
+    cache.quizSubmissions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return cache.quizSubmissions;
+  } catch(err) {
+    console.error("Load quiz submissions error:", err);
+    cache.quizSubmissions = cache.quizSubmissions || [];
+    return cache.quizSubmissions;
+  }
+}
+function getQuizSubmissions() { return cache.quizSubmissions || []; }
+
+async function addQuizSubmission(sub, quiz) {
+  await waitForFirebase();
+  const { doc, getDoc, setDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const id = qzMakeSubId(quiz.id, sub.email);
+
+    const existing = await getDoc(doc(db, "quiz_submissions", id)).catch(() => null);
+    if (existing && existing.exists()) {
+      markLocalQuizAttempt(quiz.id);
+      return { success: false, error: "You have already submitted this exam.", alreadySubmitted: true };
+    }
+
+    let mcqScore = 0, mcqTotal = 0, hasShort = false;
+    (quiz.questions || []).forEach(q => {
+      if(q.type === 'mcq') {
+        mcqTotal += Number(q.points) || 1;
+        const given = sub.answers[q.id];
+        if(given !== undefined && Number(given) === Number(q.correctIndex)) {
+          mcqScore += Number(q.points) || 1;
+        }
+      } else {
+        hasShort = true;
+      }
+    });
+
+    sub.mcqScore = mcqScore;
+    sub.mcqTotal = mcqTotal;
+    sub.shortScore = null;
+    sub.shortTotal = (quiz.questions || []).filter(q => q.type === 'short').reduce((a,q) => a + (Number(q.points)||1), 0);
+    sub.totalScore = hasShort ? null : mcqScore;
+    sub.totalPossible = mcqTotal + sub.shortTotal;
+    sub.status = hasShort ? 'pending_review' : 'reviewed';
+    sub.submittedAt = Date.now();
+    sub.startedAt = sub.startedAt || null;
+    sub.timeTakenSeconds = sub.startedAt ? Math.max(0, Math.round((sub.submittedAt - sub.startedAt) / 1000)) : null;
+
+    await setDoc(doc(db, "quiz_submissions", id), sub);
+    if(!cache.quizSubmissions) cache.quizSubmissions = [];
+    cache.quizSubmissions.unshift({ id, ...sub });
+    markLocalQuizAttempt(quiz.id);
+    return { success: true, id, result: sub };
+  } catch(err) {
+    console.error("Add quiz submission error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function gradeQuizSubmission(id, shortScore) {
+  await waitForFirebase();
+  const { doc, updateDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    const sub = (cache.quizSubmissions || []).find(x => x.id === id);
+    if(!sub) return { success: false, error: "Submission not found" };
+    const totalScore = (sub.mcqScore || 0) + Number(shortScore);
+    const update = { shortScore: Number(shortScore), totalScore, status: 'reviewed', reviewedAt: Date.now() };
+    await updateDoc(doc(db, "quiz_submissions", id), update);
+    Object.assign(sub, update);
+    return { success: true };
+  } catch(err) {
+    console.error("Grade quiz submission error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function deleteQuizSubmission(id) {
+  await waitForFirebase();
+  const { doc, deleteDoc } = window.firebaseFunctions;
+  const db = window.firebaseDB;
+  try {
+    await deleteDoc(doc(db, "quiz_submissions", id));
+    if(cache.quizSubmissions) cache.quizSubmissions = cache.quizSubmissions.filter(x => x.id !== id);
+    return true;
+  } catch(err) {
+    console.error("Delete quiz submission error:", err);
+    return false;
+  }
+}
