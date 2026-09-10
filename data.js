@@ -24,6 +24,8 @@ let cache = {
   news: [],
   messages: [],
   registrations: [],
+  quizzes: [], 
+  quizSubmissions: [],
   loaded: false
 };
 
