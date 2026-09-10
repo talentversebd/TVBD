@@ -752,3 +752,302 @@ async function prevTeamPhoto(input) {
     toast("Upload failed!", true);
   }
 }
+/*===== QUIZ / EXAM ADMIN =====*/
+let qfQuestionCount = 0;
+
+function qfTimestampToLocalInput(ts) {
+  if(!ts) return '';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function qfLocalInputToTimestamp(val) {
+  if(!val) return null;
+  const t = new Date(val).getTime();
+  return isNaN(t) ? null : t;
+}
+
+function openQuizForm() {
+  document.getElementById('qfm-title').textContent = "Add Quiz";
+  document.getElementById('qf-eid').value = '';
+  document.getElementById('qf-title').value = '';
+  document.getElementById('qf-desc').value = '';
+  document.getElementById('qf-duration').value = '';
+  document.getElementById('qf-status').value = 'draft';
+  document.getElementById('qf-start').value = '';
+  document.getElementById('qf-end').value = '';
+  document.getElementById('qf-questions').innerHTML = '';
+  qfQuestionCount = 0;
+  addQuizQuestionRow();
+  openFM('qfm');
+}
+
+function addQuizQuestionRow(existing) {
+  qfQuestionCount++;
+  const qid = existing?.id || ('q' + Date.now() + qfQuestionCount);
+  const type = existing?.type || 'mcq';
+  const wrap = document.createElement('div');
+  wrap.className = 'qf-qrow';
+  wrap.dataset.qid = qid;
+  wrap.innerHTML = `
+    <div class="qf-qrow-head">
+      <span class="qf-qnum">Q${qfQuestionCount}</span>
+      <select class="fi qf-type" onchange="toggleQfOptions(this)">
+        <option value="mcq" ${type==='mcq'?'selected':''}>MCQ</option>
+        <option value="short" ${type==='short'?'selected':''}>Short Answer</option>
+      </select>
+      <input class="fi qf-points" type="number" min="1" placeholder="Points" value="${existing?.points ?? 1}">
+      <button type="button" class="qf-qdel" onclick="this.closest('.qf-qrow').remove()">🗑 Remove</button>
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <textarea class="fi qf-qtext" style="min-height:50px;" placeholder="Question text...">${existing?.text ?? ''}</textarea>
+    </div>
+    <div class="qf-opts" style="${type==='short'?'display:none':''}">
+      ${[0,1,2,3].map(i => `
+        <div class="qf-opt-row">
+          <input type="radio" name="correct-${qid}" value="${i}" ${existing?.correctIndex===i?'checked':''}>
+          <input class="fi qf-opt" type="text" placeholder="Option ${i+1}" value="${existing?.options?.[i] ?? ''}">
+        </div>`).join('')}
+      <p style="font-size:.7rem;color:var(--muted);">Select the radio button next to the correct option.</p>
+    </div>`;
+  document.getElementById('qf-questions').appendChild(wrap);
+}
+
+function toggleQfOptions(sel) {
+  const row = sel.closest('.qf-qrow');
+  row.querySelector('.qf-opts').style.display = sel.value === 'short' ? 'none' : '';
+}
+
+function editQuiz(id) {
+  const q = getQuizzes().find(x => x.id === id);
+  if(!q) return;
+  document.getElementById('qfm-title').textContent = "Edit Quiz";
+  document.getElementById('qf-eid').value = id;
+  document.getElementById('qf-title').value = q.title || '';
+  document.getElementById('qf-desc').value = q.description || '';
+  document.getElementById('qf-duration').value = q.duration || '';
+  document.getElementById('qf-status').value = q.status || 'draft';
+  document.getElementById('qf-start').value = qfTimestampToLocalInput(q.startAt);
+  document.getElementById('qf-end').value = qfTimestampToLocalInput(q.endAt);
+  document.getElementById('qf-questions').innerHTML = '';
+  qfQuestionCount = 0;
+  (q.questions || []).forEach(qq => addQuizQuestionRow(qq));
+  if(!q.questions || !q.questions.length) addQuizQuestionRow();
+  openFM('qfm');
+}
+
+async function saveQuiz() {
+  const title = document.getElementById('qf-title').value.trim();
+  const description = document.getElementById('qf-desc').value.trim();
+  const duration = parseInt(document.getElementById('qf-duration').value) || 30;
+  const status = document.getElementById('qf-status').value;
+  const eid = document.getElementById('qf-eid').value;
+  const startAt = qfLocalInputToTimestamp(document.getElementById('qf-start').value);
+  const endAt = qfLocalInputToTimestamp(document.getElementById('qf-end').value);
+
+  if(!title) return toast("Quiz title is required!", true);
+  if(startAt && endAt && endAt <= startAt) return toast("End time must be after start time!", true);
+
+  const rows = document.querySelectorAll('#qf-questions .qf-qrow');
+  if(!rows.length) return toast("Add at least one question!", true);
+
+  const questions = [];
+  for(const row of rows) {
+    const qid = row.dataset.qid;
+    const type = row.querySelector('.qf-type').value;
+    const text = row.querySelector('.qf-qtext').value.trim();
+    const points = parseInt(row.querySelector('.qf-points').value) || 1;
+    if(!text) return toast("Every question needs text!", true);
+
+    if(type === 'mcq') {
+      const opts = Array.from(row.querySelectorAll('.qf-opt')).map(i => i.value.trim());
+      const checked = row.querySelector(`input[name="correct-${qid}"]:checked`);
+      if(opts.some(o => !o)) return toast("Fill in all 4 options for every MCQ!", true);
+      if(!checked) return toast("Mark the correct option for every MCQ!", true);
+      questions.push({ id: qid, type: 'mcq', text, options: opts, correctIndex: parseInt(checked.value), points });
+    } else {
+      questions.push({ id: qid, type: 'short', text, points });
+    }
+  }
+
+  const quiz = { title, description, duration, status, startAt, endAt, questions };
+
+  const result = eid ? await updateQuiz(eid, quiz) : await addQuiz(quiz);
+  if(result.success) {
+    toast(eid ? "Quiz updated!" : "Quiz created!");
+    closeFM('qfm');
+    renderQuizTable();
+  } else {
+    toast(result.error || "Save failed!", true);
+  }
+}
+
+async function deleteQuizAction(id) {
+  if(!confirm("Delete this quiz? All its submissions will remain but the quiz itself will be gone.")) return;
+  const ok = await deleteQuiz(id);
+  if(ok) { toast("Quiz deleted!"); renderQuizTable(); }
+  else toast("Delete failed!", true);
+}
+
+function renderQuizTable() {
+  const tbody = document.getElementById('qtbl');
+  if(!tbody) return;
+  const quizzes = getQuizzes();
+  if(!quizzes.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No quizzes yet. Click "+ Add Quiz" to create one.</td></tr>`;
+    return;
+  }
+  const fmt = ts => new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  tbody.innerHTML = quizzes.map(q => {
+    let sched = '<span style="color:var(--muted);font-size:.78rem;">Always open</span>';
+    if(q.startAt || q.endAt) {
+      const avail = getQuizAvailability(q);
+      const label = avail.open ? (q.endAt ? `Open · closes ${fmt(q.endAt)}` : 'Open now')
+        : (avail.reason === 'not_started' ? `Opens ${fmt(q.startAt)}` : `Closed ${fmt(q.endAt)}`);
+      sched = `<span style="font-size:.78rem;">${label}</span>`;
+    }
+    return `
+    <tr>
+      <td><strong>${q.title}</strong></td>
+      <td>${(q.questions || []).length}</td>
+      <td>${q.duration} min</td>
+      <td>${sched}</td>
+      <td><span class="bs ${q.status === 'published' ? 'bs-active' : 'bs-past'}">${q.status === 'published' ? 'Published' : 'Draft'}</span></td>
+      <td class="tbl-acts">
+        <button class="e-btn" onclick="editQuiz('${q.id}')">Edit</button>
+        <button class="d-btn" onclick="deleteQuizAction('${q.id}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+/*----- QUIZ SUBMISSIONS (review & grade) -----*/
+function renderQuizSubmissionsTable() {
+  const tbody = document.getElementById('qstbl');
+  if(!tbody) return;
+  const subs = getQuizSubmissions();
+  const quizzes = getQuizzes();
+  if(!subs.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">No submissions yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = subs.map(s => {
+    const quiz = quizzes.find(q => q.id === s.quizId);
+    const statusBadge = s.status === 'reviewed'
+      ? `<span class="bs bs-active">Reviewed</span>`
+      : `<span class="bs bs-upcoming">Pending Review</span>`;
+    const startedStr = s.startedAt ? new Date(s.startedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+    const submittedStr = s.submittedAt ? new Date(s.submittedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+    let timeTakenStr = '—';
+    if(s.timeTakenSeconds != null) {
+      const m = Math.floor(s.timeTakenSeconds / 60), sec = s.timeTakenSeconds % 60;
+      timeTakenStr = `${m}m ${sec}s`;
+    }
+    return `
+    <tr>
+      <td><strong>${s.name}</strong><br><span style="color:var(--muted);font-size:.75rem;">${s.email || ''} ${s.phone ? '· ' + s.phone : ''}</span></td>
+      <td>${quiz ? quiz.title : '(deleted quiz)'}</td>
+      <td>${s.mcqScore ?? 0} / ${s.mcqTotal ?? 0}</td>
+      <td>${s.shortScore === null || s.shortScore === undefined ? '—' : s.shortScore + ' / ' + s.shortTotal}</td>
+      <td><strong>${s.totalScore === null || s.totalScore === undefined ? '—' : s.totalScore + ' / ' + s.totalPossible}</strong></td>
+      <td>${statusBadge}</td>
+      <td style="white-space:nowrap;font-size:.78rem;color:var(--muted);">${startedStr}</td>
+      <td style="white-space:nowrap;font-size:.78rem;color:var(--muted);">${submittedStr}</td>
+      <td style="white-space:nowrap;font-size:.78rem;">${timeTakenStr}</td>
+      <td class="tbl-acts">
+        <button class="e-btn" onclick="openGradeModal('${s.id}')">${s.shortTotal > 0 ? 'Review' : 'View'}</button>
+        <button class="d-btn" onclick="deleteQuizSubmissionAction('${s.id}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteQuizSubmissionAction(id) {
+  if(!confirm("Delete this submission?")) return;
+  const ok = await deleteQuizSubmission(id);
+  if(ok) { toast("Submission deleted!"); renderQuizSubmissionsTable(); }
+  else toast("Delete failed!", true);
+}
+
+function openGradeModal(id) {
+  const sub = getQuizSubmissions().find(x => x.id === id);
+  if(!sub) return;
+  const quiz = getQuizzes().find(q => q.id === sub.quizId);
+  document.getElementById('qg-sid').value = id;
+
+  const shortQuestions = (quiz?.questions || []).filter(q => q.type === 'short');
+  const mcqQuestions = (quiz?.questions || []).filter(q => q.type === 'mcq');
+
+  let timeTakenStr = '—';
+  if(sub.timeTakenSeconds != null) {
+    const m = Math.floor(sub.timeTakenSeconds / 60), sec = sub.timeTakenSeconds % 60;
+    timeTakenStr = `${m}m ${sec}s`;
+  }
+  const startedStr = sub.startedAt ? new Date(sub.startedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+  const submittedStr = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+
+  let html = `
+    <div style="background:var(--card2);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <strong>${sub.name}</strong><br>
+      <span style="color:var(--muted);font-size:.82rem;">${sub.email || ''} ${sub.phone ? '· ' + sub.phone : ''} ${sub.registrationId ? '· Reg ID: ' + sub.registrationId : ''}</span><br>
+      <span style="color:var(--lblue);font-size:.85rem;">MCQ auto-score: ${sub.mcqScore ?? 0} / ${sub.mcqTotal ?? 0}</span><br>
+      <span style="color:var(--muted);font-size:.78rem;">Started: ${startedStr} · Submitted: ${submittedStr} · Time taken: ${timeTakenStr}</span>
+    </div>`;
+
+  if(mcqQuestions.length) {
+    html += `<h4 style="font-size:.85rem;margin-bottom:10px;">MCQ Answers</h4>`;
+    mcqQuestions.forEach((q, i) => {
+      const given = sub.answers?.[q.id];
+      const correct = given !== undefined && Number(given) === Number(q.correctIndex);
+      html += `<div style="margin-bottom:10px;font-size:.82rem;">
+        <strong>${i+1}. ${q.text}</strong><br>
+        <span style="color:${correct ? '#4ade80' : '#f87171'};">
+          Answered: ${q.options?.[given] ?? '(no answer)'} ${correct ? '✅' : '❌ (correct: ' + q.options?.[q.correctIndex] + ')'}
+        </span>
+      </div>`;
+    });
+  }
+
+  if(shortQuestions.length) {
+    html += `<h4 style="font-size:.85rem;margin:14px 0 10px;">Short Answers — score manually</h4>`;
+    shortQuestions.forEach((q, i) => {
+      const given = sub.answers?.[q.id] || '(no answer)';
+      html += `<div style="margin-bottom:12px;font-size:.82rem;">
+        <strong>${i+1}. ${q.text}</strong> <span style="color:var(--muted);">(${q.points} pts)</span><br>
+        <div style="background:var(--card2);border-radius:8px;padding:10px;margin:6px 0;white-space:pre-wrap;">${given}</div>
+      </div>`;
+    });
+    html += `
+      <div class="fg">
+        <label>Short-answer score (out of ${sub.shortTotal})</label>
+        <input class="fi" type="number" id="qg-shortscore" min="0" max="${sub.shortTotal}" value="${sub.shortScore ?? ''}">
+      </div>`;
+  } else {
+    html += `<p style="color:var(--muted);font-size:.82rem;">This quiz has no short-answer questions — score is fully automatic.</p>`;
+  }
+
+  document.getElementById('qg-body').innerHTML = html;
+  openFM('qgm');
+}
+
+async function saveQuizGrade() {
+  const id = document.getElementById('qg-sid').value;
+  const sub = getQuizSubmissions().find(x => x.id === id);
+  const shortInput = document.getElementById('qg-shortscore');
+
+  let shortScore = 0;
+  if(shortInput) {
+    shortScore = parseFloat(shortInput.value);
+    if(isNaN(shortScore) || shortScore < 0 || shortScore > sub.shortTotal) {
+      return toast(`Enter a score between 0 and ${sub.shortTotal}`, true);
+    }
+  }
+
+  const result = await gradeQuizSubmission(id, shortScore);
+  if(result.success) {
+    toast("Score saved!");
+    closeFM('qgm');
+    renderQuizSubmissionsTable();
+  } else {
+    toast(result.error || "Failed to save score!", true);
+  }
+}
