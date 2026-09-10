@@ -101,6 +101,16 @@ select.fi{cursor:pointer}
 .chk-wrap{display:flex;align-items:center;gap:8px;padding:12px;background:rgba(37,99,235,.05);border:1px solid var(--bdr);border-radius:8px}
 .chk-wrap input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:var(--blue-br)}
 .chk-wrap label{margin:0;font-size:.85rem;color:var(--txt);cursor:pointer}
+.qf-qrow{background:var(--card2);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:12px}
+.qf-qrow-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.qf-qrow-head select{flex-shrink:0;width:auto}
+.qf-qrow-head .qf-qnum{font-size:.75rem;font-weight:700;color:var(--muted);flex-shrink:0}
+.qf-qrow-head .qf-qdel{margin-left:auto;background:none;border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:6px;padding:5px 10px;font-size:.72rem;cursor:pointer;flex-shrink:0}
+.qf-qrow-head .qf-qdel:hover{background:rgba(239,68,68,.1)}
+.qf-opt-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.qf-opt-row input[type="radio"]{accent-color:#22c55e;flex-shrink:0;width:16px;height:16px}
+.qf-opt-row input[type="text"]{flex:1}
+.qf-points{width:90px !important;flex-shrink:0}
 @media(max-width:700px){
   .adm-sb{position:fixed;left:0;top:0;bottom:0;z-index:4002;transform:translateX(-100%);width:220px}
   .adm-sb.open{transform:translateX(0)}
@@ -151,6 +161,9 @@ select.fi{cursor:pointer}
         <button class="adm-nb" data-sec="olymp-adm" onclick="goSec(this)"><span class="ico">🏆</span>Olympiads</button>
         <button class="adm-nb" data-sec="team-adm" onclick="goSec(this)"><span class="ico">👔</span>Team Members</button>
         <button class="adm-nb" data-sec="news-adm" onclick="goSec(this)"><span class="ico">📰</span>News</button>
+        <div class="adm-ns">Exam</div>
+        <button class="adm-nb" data-sec="quiz-adm" onclick="goSec(this)"><span class="ico">📋</span>Quizzes</button>
+        <button class="adm-nb" data-sec="qsub-adm" onclick="goSec(this)"><span class="ico">🧾</span>Quiz Submissions</button>
         <div class="adm-ns">Inbox</div>
 <button class="adm-nb" data-sec="msg-adm" onclick="goSec(this)"><span class="ico">✉️</span>Messages</button>
 <button class="adm-nb" data-sec="reg-adm" onclick="goSec(this)"><span class="ico">📝</span>Registrations</button>
@@ -229,6 +242,26 @@ select.fi{cursor:pointer}
           <table class="tbl">
             <thead><tr><th>Headline</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody id="ntbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- QUIZZES -->
+      <div class="adm-sec" id="quiz-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Title</th><th>Questions</th><th>Duration</th><th>Schedule</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="qtbl"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- QUIZ SUBMISSIONS -->
+      <div class="adm-sec" id="qsub-adm">
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Student</th><th>Quiz</th><th>MCQ Score</th><th>Short Score</th><th>Total</th><th>Status</th><th>Started</th><th>Submitted</th><th>Time Taken</th><th>Actions</th></tr></thead>
+            <tbody id="qstbl"></tbody>
           </table>
         </div>
       </div>
@@ -537,6 +570,16 @@ select.fi{cursor:pointer}
       </div>
     </div>
 
+    <div class="fg">
+      <label>🎯 Linked Quiz (Optional)</label>
+      <select class="fi" id="of-quiz">
+        <option value="">-- No Quiz Linked --</option>
+      </select>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:6px;">
+        💡 If this event has an online quiz/exam, link it here. A "📝 Take Quiz Now" button will automatically show up on this event once the linked quiz is Published (manage quizzes under the "Exam" menu).
+      </p>
+    </div>
+
     <div class="fg"><label>Short Description *</label><textarea class="fi" id="of-ds"></textarea></div>
     <div class="fg"><label>Full Description</label><textarea class="fi" style="min-height:130px" id="of-fd"></textarea></div>
     <div class="fg">
@@ -703,6 +746,63 @@ select.fi{cursor:pointer}
     <div class="fm-foot">
       <button class="fc-btn" onclick="closeFM('nfm')">Cancel</button>
       <button class="fs-btn" onclick="saveNews()">Save News</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ BUILDER FORM -->
+<div class="fm-ov" id="qfm" onclick="if(event.target===this)closeFM('qfm')">
+  <div class="fm" style="max-width:760px;">
+    <div class="fm-head">
+      <h3 id="qfm-title">Add Quiz</h3>
+      <button onclick="closeFM('qfm')">✕</button>
+    </div>
+    <input type="hidden" id="qf-eid">
+
+    <div class="fg"><label>Title *</label><input class="fi" id="qf-title" placeholder="e.g. National Math Olympiad — Prelim Quiz"></div>
+    <div class="fg"><label>Description</label><textarea class="fi" id="qf-desc" style="min-height:60px;" placeholder="Short instructions shown to students before they start..."></textarea></div>
+
+    <div class="f-row">
+      <div class="fg"><label>Duration (minutes) *</label><input class="fi" type="number" id="qf-duration" min="1" placeholder="e.g. 30"></div>
+      <div class="fg"><label>Status</label>
+        <select class="fi" id="qf-status">
+          <option value="draft">Draft (hidden from students)</option>
+          <option value="published">Published (visible)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f-row">
+      <div class="fg"><label>Start Time (optional)</label><input class="fi" type="datetime-local" id="qf-start"></div>
+      <div class="fg"><label>End / Deadline (optional)</label><input class="fi" type="datetime-local" id="qf-end"></div>
+    </div>
+    <p style="font-size:.72rem;color:var(--muted);margin:-10px 0 14px;">Leave both blank to keep the exam open any time it's Published. If set, the exam auto-opens/closes at these times — no need to change Status manually.</p>
+
+    <div class="fg">
+      <label>Questions</label>
+      <div id="qf-questions"></div>
+      <button type="button" class="fc-btn" style="margin-top:8px;" onclick="addQuizQuestionRow()">+ Add Question</button>
+    </div>
+
+    <div class="fm-foot">
+      <button class="fc-btn" onclick="closeFM('qfm')">Cancel</button>
+      <button class="fs-btn" onclick="saveQuiz()">Save Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SUBMISSION GRADING MODAL -->
+<div class="fm-ov" id="qgm" onclick="if(event.target===this)closeFM('qgm')">
+  <div class="fm" style="max-width:680px;">
+    <div class="fm-head">
+      <h3>Review Submission</h3>
+      <button onclick="closeFM('qgm')">✕</button>
+    </div>
+    <input type="hidden" id="qg-sid">
+    <div id="qg-body"></div>
+    <div class="fm-foot">
+      <button class="fc-btn" onclick="closeFM('qgm')">Cancel</button>
+      <button class="fs-btn" onclick="saveQuizGrade()">💾 Save Score</button>
     </div>
   </div>
 </div>
