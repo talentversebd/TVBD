@@ -24,7 +24,7 @@ let cache = {
   news: [],
   messages: [],
   registrations: [],
-  quizzes: [], 
+  quizzes: [],
   quizSubmissions: [],
   loaded: false
 };
@@ -65,6 +65,12 @@ async function loadAllData() {
     // Load News
     const newsSnap = await getDocs(query(collection(db, "news"), orderBy("createdAt", "desc")));
     cache.news = newsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Load Quizzes (needed on public pages too, so the "Take Quiz" button
+    // can be shown on events linked to a published quiz)
+    if(typeof loadQuizzes === 'function') {
+      await loadQuizzes();
+    }
 
     cache.loaded = true;
     console.log("✅ Data loaded from Firestore");
@@ -626,6 +632,7 @@ async function deleteTeamMember(id) {
     return false;
   }
 }
+
 /*===== QUIZ / EXAM SYSTEM =====*/
 
 // Load all quizzes
@@ -646,11 +653,13 @@ async function loadQuizzes() {
 function getQuizzes() { return cache.quizzes || []; }
 function getPublishedQuizzes() { return (cache.quizzes || []).filter(q => q.status === 'published'); }
 
+// Deterministic submission ID: one document per (quiz, email) pair.
 function qzMakeSubId(quizId, email) {
   const clean = (email || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '') || 'noemail';
   return `${quizId}__${clean}`;
 }
 
+// Is a quiz currently open based on its optional start/end schedule?
 function getQuizAvailability(quiz) {
   const now = Date.now();
   if (quiz.startAt && now < quiz.startAt) {
@@ -662,6 +671,7 @@ function getQuizAvailability(quiz) {
   return { open: true, reason: 'ok' };
 }
 
+// Local (device-level) guard — instant, no network needed.
 function hasLocalQuizAttempt(quizId) {
   try { return !!localStorage.getItem('tvbd_quiz_done_' + quizId); } catch (e) { return false; }
 }
@@ -669,6 +679,7 @@ function markLocalQuizAttempt(quizId) {
   try { localStorage.setItem('tvbd_quiz_done_' + quizId, String(Date.now())); } catch (e) {}
 }
 
+// Best-effort server-side guard (email-level, works across devices).
 async function hasAlreadyAttemptedQuiz(quizId, email) {
   if (hasLocalQuizAttempt(quizId)) return true;
   await waitForFirebase();
@@ -748,6 +759,7 @@ async function deleteQuiz(id) {
     return false;
   }
 }
+
 /*----- QUIZ SUBMISSIONS -----*/
 async function loadQuizSubmissions() {
   await waitForFirebase();
@@ -765,6 +777,8 @@ async function loadQuizSubmissions() {
 }
 function getQuizSubmissions() { return cache.quizSubmissions || []; }
 
+// Auto-scores MCQ questions, saves submission. status = 'reviewed' if the quiz
+// has no short-answer questions (fully auto-graded), else 'pending_review'.
 async function addQuizSubmission(sub, quiz) {
   await waitForFirebase();
   const { doc, getDoc, setDoc } = window.firebaseFunctions;
@@ -813,6 +827,7 @@ async function addQuizSubmission(sub, quiz) {
   }
 }
 
+// Admin scores the short-answer part; combines with the auto MCQ score.
 async function gradeQuizSubmission(id, shortScore) {
   await waitForFirebase();
   const { doc, updateDoc } = window.firebaseFunctions;
