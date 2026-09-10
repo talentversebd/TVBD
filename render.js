@@ -1,3 +1,24 @@
+/*===== QUIZ LINK HELPER =====*/
+// Returns the linked, published quiz object for an olympiad/event (or null).
+// Used to decide whether to show a "Take Quiz" button on that event's
+// card and modal. Scheduling (not-open-yet / closed) is handled by
+// quiz.html itself, so we only check status here.
+function getLinkedQuizFor(o) {
+  if(!o || !o.quizId) return null;
+  if(typeof getQuizzes !== 'function') return null;
+  const q = getQuizzes().find(x => x.id === o.quizId);
+  return (q && q.status === 'published') ? q : null;
+}
+
+function quizTakeButtonHtml(o) {
+  const q = getLinkedQuizFor(o);
+  if(!q) return '';
+  return `<a href="quiz.html?id=${q.id}" onclick="event.stopPropagation()"
+    style="display:block;text-align:center;margin-top:8px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;text-decoration:none;padding:10px;border-radius:8px;font-weight:700;font-size:.85rem;">
+    📝 Take Quiz Now
+  </a>`;
+}
+
 /*===== RENDER ALL =====*/
 function renderAll() {
   renderHome();
@@ -81,6 +102,7 @@ function renderOlympiads() {
         </div>
         <p class="o-card-desc">${o.desc}</p>
         <button class="rm-btn">Read More</button>
+        ${quizTakeButtonHtml(o)}
       </div>`;
     grid.appendChild(card);
   });
@@ -191,9 +213,17 @@ function openModal(i) {
       <div class="md-val">${o.prize || 'N/A'}</div>
     </div>`;
 
-  if(reg) reg.innerHTML = o.regLink
-    ? `<a href="${o.regLink}" target="_blank" class="modal-reg-btn">Register Now 🚀</a>`
-    : '';
+  const linkedQuiz = getLinkedQuizFor(o);
+  if(reg) {
+    let regHtml = o.regLink
+      ? `<a href="${o.regLink}" target="_blank" class="modal-reg-btn">Register Now 🚀</a>`
+      : '';
+    if(linkedQuiz) {
+      regHtml += `<a href="quiz.html?id=${linkedQuiz.id}" class="modal-reg-btn"
+        style="background:linear-gradient(135deg,#16a34a,#15803d);margin-top:10px;">📝 Take Quiz Now</a>`;
+    }
+    reg.innerHTML = regHtml;
+  }
 
   const modal = document.getElementById('o-modal');
   if(modal) {
